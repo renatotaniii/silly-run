@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://kw40dg8o2ro8"]
+
+[ext_resource type="PackedScene" uid="uid://b8p8hgdusibuv" path="res://godot/player.glb" id="1_4flbx"]
+[ext_resource type="Script" uid="uid://dli4lmmi4i0gv" path="res://godot/player.gd" id="1_onrkg"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_onrkg"]
+radius = 0.8
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_onrkg")
+
+[node name="Pivot" type="Node3D" parent="."]
+
+[node name="Character" parent="Pivot" instance=ExtResource("1_4flbx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44492358, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.829257, 0)
+shape = SubResource("SphereShape3D_onrkg")
