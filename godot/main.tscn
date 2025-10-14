@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://gv66p8ps1llu"]
+[gd_scene load_steps=8 format=3 uid="uid://gv66p8ps1llu"]
 
 [ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://godot/player.tscn" id="1_5s166"]
+[ext_resource type="PackedScene" uid="uid://cxheyyqptgx6c" path="res://godot/ball.tscn" id="1_sscoq"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fk20e"]
 size = Vector3(60, 2, 60)
@@ -8,7 +9,18 @@ size = Vector3(60, 2, 60)
 [sub_resource type="BoxMesh" id="BoxMesh_5s166"]
 size = Vector3(60, 2, 60)
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_sscoq"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_sscoq"]
+size = Vector3(1, 4, 60)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wop1k"]
+size = Vector3(1, 4, 60)
+
 [node name="Main" type="Node"]
+
+[node name="Ball" parent="." instance=ExtResource("1_sscoq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7311687, -2)
 
 [node name="Ground" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -25,10 +37,58 @@ shadow_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_5s166")]
 
-[node name="CameraPivot" type="Marker3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.609755, 0)
-
-[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 0.5, 0.86602545, 0, -0.86602545, 0.5, 0, 4, 19)
+[node name="Camera3D" type="Camera3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.86602545, 0, -0.86602545, 0.5, -0.5610962, 19.875933, 11)
 projection = 1
-size = 30.219116
+size = 39.33005
+
+[node name="WallNegativeZ" type="StaticBody3D" parent="."]
+transform = Transform3D(1.3113416e-07, 0, 1, 0, 1, 0, -1, 0, 1.3113416e-07, -0.23722838, 0, -0.22207642)
+physics_material_override = SubResource("PhysicsMaterial_sscoq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallNegativeZ"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+mesh = SubResource("BoxMesh_sscoq")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallNegativeZ"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+shape = SubResource("BoxShape3D_wop1k")
+
+[node name="WallPositiveZ" type="StaticBody3D" parent="."]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.2372284, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_sscoq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallPositiveZ"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+mesh = SubResource("BoxMesh_sscoq")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallPositiveZ"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+shape = SubResource("BoxShape3D_wop1k")
+
+[node name="WallNegativeX" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -60.118614, 0, 0)
+physics_material_override = SubResource("PhysicsMaterial_sscoq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallNegativeX"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+mesh = SubResource("BoxMesh_sscoq")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallNegativeX"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+shape = SubResource("BoxShape3D_wop1k")
+
+[node name="WallPositiveX" type="StaticBody3D" parent="."]
+physics_material_override = SubResource("PhysicsMaterial_sscoq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="WallPositiveX"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+mesh = SubResource("BoxMesh_sscoq")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallPositiveX"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 1, 0)
+shape = SubResource("BoxShape3D_wop1k")
