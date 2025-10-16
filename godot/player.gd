@@ -1,6 +1,12 @@
 extends CharacterBody3D
 
+enum CameraModes {
+	TOP_DOWN,
+	DEBUG,
+}
+
 # Configurables
+@export var camera_mode: CameraModes = CameraModes.TOP_DOWN
 @export var move_speed = 10.0
 @export var jump_impulse = 5.0
 @export var gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
@@ -9,6 +15,7 @@ extends CharacterBody3D
 @export var momentum_increase_rate = 3.0
 @export var momentum_decay_rate = 4.0
 @export var max_momentum = 2.0
+@export var camera_sensitivity := 500
 
 # Ball reference (Set ball node path in the inspector)
 @export var ball_node_path: NodePath
@@ -20,6 +27,15 @@ var momentum = 1.0
 var dash_timer = 0.0
 var is_dashing = false
 
+func _ready() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	# Set the camera mode in the inspector
+	if camera_mode == CameraModes.TOP_DOWN:
+		$CameraPivot/Camera3D.position = Vector3(0, 20, 0)
+		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
+	elif camera_mode == CameraModes.DEBUG:
+		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
+		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 
 # Returns a direction for use with e.g. speed
 func get_input_direction() -> Vector3:
@@ -34,9 +50,17 @@ func get_input_direction() -> Vector3:
 	if Input.is_action_pressed("move_left"):
 		direction.x -= 1
 	
+	# Original character pivoting is preserved in TOP_DOWN mode
 	if direction.length() > 0:
-		direction = direction.normalized()
-		$Pivot.basis = Basis.looking_at(direction)
+		if camera_mode == CameraModes.TOP_DOWN:
+			direction = direction.normalized()
+			$Pivot.basis = Basis.looking_at(direction)
+		elif camera_mode == CameraModes.DEBUG:
+			print(direction)
+			direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z)).normalized()
+			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
+			# so I just did it manually below
+			$Pivot.basis = Basis.looking_at(Vector3(direction.x, 0, direction.z))
 		
 	return direction
 
@@ -89,4 +113,19 @@ func _on_collide(body: Node3D) -> void:
 		# TO DO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
-	
+
+func _input(event):
+	# Camera is moveable in DEBUG mode
+	if camera_mode == CameraModes.DEBUG:
+		if event is InputEventMouseMotion:
+			$CameraPivot.rotation.y -= event.relative.x / camera_sensitivity
+			$CameraPivot.rotation.x -= event.relative.y / camera_sensitivity
+		if event is InputEventMouseButton:
+			if event.is_pressed():
+				var wheel_input = 0.0
+				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+					wheel_input += 1
+				if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+					wheel_input -= 1
+				var mouse_dir = $CameraPivot.basis.y * wheel_input
+				$CameraPivot/Camera3D.global_position -= mouse_dir
