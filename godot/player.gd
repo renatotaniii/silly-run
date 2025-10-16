@@ -5,12 +5,12 @@ extends CharacterBody3D
 @export var jump_impulse = 5.0
 @export var gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
 @export var dash_force = 100.0
-@export var dash_duration = 0.5
+@export var dash_duration = 0.1
 @export var momentum_increase_rate = 3.0
 @export var momentum_decay_rate = 4.0
 @export var max_momentum = 2.0
 
-# Ball reference
+# Ball reference (Set ball node path in the inspector)
 @export var ball_node_path: NodePath
 @onready var ball: RigidBody3D = get_node(ball_node_path)
 
@@ -56,16 +56,19 @@ func _physics_process(delta: float) -> void:
 	else:
 		momentum = max(momentum - momentum_decay_rate * delta, 1.0)
 
-	# Apply movement
-	var target_velocity = input_direction * move_speed * momentum
-	velocity.x = target_velocity.x # can also use linear interpolation
-	velocity.z = target_velocity.z
-
 	# Dash
-	if Input.is_action_just_pressed("dash") and not is_dashing:
+	if is_dashing:
+		velocity = input_direction * dash_force
+	# Stop walking velocity on dash
+	else:
+		# Apply movement
+		var target_velocity = input_direction * move_speed * momentum
+		velocity.x = target_velocity.x # can also use linear interpolation
+		velocity.z = target_velocity.z
+
+	if Input.is_action_just_pressed("dash"):
 		is_dashing = true
 		dash_timer = dash_duration
-		velocity += input_direction * dash_force
 
 	if is_dashing:
 		dash_timer -= delta
@@ -77,7 +80,13 @@ func _physics_process(delta: float) -> void:
 	# Ball interactions
 	if ball and input_direction.length() > 0:
 		var distance = (ball.global_position - global_position).length()
-		if distance < 3.0:  # interaction range
+		if distance < 1.0:  # interaction range
 			ball.push(input_direction, 1.0)  # strength can be adjusted
 
+func _on_collide(body: Node3D) -> void:
+	if body.name == "Ball" and velocity != Vector3.ZERO:
+		body.push(2 * velocity)
+		# TO DO:
+		# Apply a baseline directional force on the situation that the player dashes
+		# and the Velocity is detected as ZERO on collision
 	

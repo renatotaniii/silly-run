@@ -15,11 +15,9 @@ func _physics_process(_delta: float):
 	velocity_approx = Vector3(linear_velocity.x, 0, linear_velocity.z)
 	
 	# Drag to prevent infinite sliding
-	"""
 	if velocity_approx.length() > 0.01:  # only apply drag if significant
 		var drag_force = -velocity_approx.normalized() * drag * mass
 		apply_central_force(drag_force)
-	"""
 	
 	# Limit horizontal speed
 	if velocity_approx.length() > max_speed:
@@ -28,7 +26,5 @@ func _physics_process(_delta: float):
 		linear_velocity.z = horizontal_velocity.z
 
 # Player interaction
-func push(direction: Vector3, strength=1.0):
-	if direction.length() == 0:
-		return
-	apply_central_impulse(direction * move_force * strength)
+func push(push_force: Vector3):
+	apply_impulse(push_force)
