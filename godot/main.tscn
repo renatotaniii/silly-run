@@ -37,11 +37,6 @@ shadow_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_5s166")]
 
-[node name="Camera3D" type="Camera3D" parent="Player"]
-transform = Transform3D(1, 0, 0, 0, 0.5, 0.86602545, 0, -0.86602545, 0.5, -0.5610962, 19.875933, 11)
-projection = 1
-size = 39.33005
-
 [node name="WallNegativeZ" type="StaticBody3D" parent="."]
 transform = Transform3D(1.3113416e-07, 0, 1, 0, 1, 0, -1, 0, 1.3113416e-07, -0.23722838, 0, -0.22207642)
 physics_material_override = SubResource("PhysicsMaterial_sscoq")
