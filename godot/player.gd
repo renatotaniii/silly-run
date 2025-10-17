@@ -54,14 +54,14 @@ func get_input_direction() -> Vector3:
 	if direction.length() > 0:
 		if camera_mode == CameraModes.TOP_DOWN:
 			direction = direction.normalized()
-			$Pivot.basis = Basis.looking_at(direction)
 		elif camera_mode == CameraModes.DEBUG:
-			print(direction)
-			direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z)).normalized()
+			var camera_direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z))
 			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
 			# so I just did it manually below
-			$Pivot.basis = Basis.looking_at(Vector3(direction.x, 0, direction.z))
+			print(camera_direction)
+			direction = Vector3(camera_direction.x, 0, camera_direction.z)
 		
+		$Pivot.basis = Basis.looking_at(direction)
 	return direction
 
 func _physics_process(delta: float) -> void:
@@ -82,6 +82,7 @@ func _physics_process(delta: float) -> void:
 
 	# Dash
 	if is_dashing:
+		print(input_direction)
 		velocity = input_direction * dash_force
 	# Stop walking velocity on dash
 	else:
