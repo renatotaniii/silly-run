@@ -17,15 +17,20 @@ enum CameraModes {
 @export var max_momentum = 2.0
 @export var camera_sensitivity := 500
 
-# Ball reference (Set ball node path in the inspector)
-@export var ball_node_path: NodePath
-@onready var ball: RigidBody3D = get_node(ball_node_path)
+"""
+NOTE: Keeping this here until it is sure that the way items are interacted with is robust
+      (see _on_collide)
 
+# Ball reference (Set ball node path in the inspector)
+@export var ball_node: Ball
+@onready var ball: RigidBody3D = get_node("../Ball")
+"""
 
 # Player state
 var momentum = 1.0
 var dash_timer = 0.0
 var is_dashing = false
+
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -36,6 +41,7 @@ func _ready() -> void:
 	elif camera_mode == CameraModes.DEBUG:
 		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
 		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
+
 
 # Returns a direction for use with e.g. speed
 func get_input_direction() -> Vector3:
@@ -63,6 +69,7 @@ func get_input_direction() -> Vector3:
 		
 		$Pivot.basis = Basis.looking_at(direction)
 	return direction
+
 
 func _physics_process(delta: float) -> void:
 	# Vertical velocity
@@ -101,19 +108,15 @@ func _physics_process(delta: float) -> void:
 			is_dashing = false
 	
 	move_and_slide()
-	
-	# Ball interactions
-	if ball and input_direction.length() > 0:
-		var distance = (ball.global_position - global_position).length()
-		if distance < 1.0:  # interaction range
-			ball.push(input_direction, 1.0)  # strength can be adjusted
+
 
 func _on_collide(body: Node3D) -> void:
-	if body.name == "Ball" and velocity != Vector3.ZERO:
-		body.push(2 * velocity)
+	if body is Ball and velocity != Vector3.ZERO:
+		body.push(velocity, 2)
 		# TO DO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
+
 
 func _input(event):
 	# Camera is moveable in DEBUG mode
