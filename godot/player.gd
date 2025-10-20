@@ -5,7 +5,7 @@ enum CameraModes {
 	DEBUG,
 }
 
-# Configurables
+# Player configurables
 @export var camera_mode: CameraModes = CameraModes.TOP_DOWN
 @export var move_speed = 10.0
 @export var jump_impulse = 5.0
@@ -18,7 +18,7 @@ enum CameraModes {
 @export var camera_sensitivity := 500
 
 """
-NOTE: Keeping this here until it is sure that the way items are interacted with is robust
+NOTE: Keeping this part here until it is sure that the way items are interacted with is robust
       (see _on_collide)
 
 # Ball reference (Set ball node path in the inspector)
@@ -32,8 +32,12 @@ var dash_timer = 0.0
 var is_dashing = false
 
 
+# Item declarations
+var Ball = preload("res://godot/ball.tscn")
+
+
 func _ready() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE # from _CAPTURED, _VISIBLE
 	# Set the camera mode in the inspector
 	if camera_mode == CameraModes.TOP_DOWN:
 		$CameraPivot/Camera3D.position = Vector3(0, 20, 0)
@@ -101,6 +105,30 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dash"):
 		is_dashing = true
 		dash_timer = dash_duration
+		
+	if Input.is_action_just_pressed("throw_object"):
+		# TODO: Use a height map? When clicking on an elevation, parallax is
+		#       not being taken into account.
+		var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+		var mouse_pos = get_viewport().get_mouse_position()
+		var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
+		var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
+		mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+		
+		var resultant = mouse_pos - global_position
+		var dx = resultant.x
+		var dz = resultant.z
+		var xz_direction = Vector3(dx, 0, dz).normalized()
+		var xz_distance = sqrt(dx**2 + dz**2)
+		
+		# TODO: Combine with inventory system. For now, we'll just use a ball.
+		var item = Ball.instantiate()    # node
+		
+		# TODO: Adjust ThrowOrigin (Marker3D) according to player proportions.
+		# https://docs.godotengine.org/en/stable/tutorials/physics/using_character_body_2d.html#bouncing-reflecting      
+		var origin = $Pivot/ThrowOrigin
+		
+		item.use_throw(item, origin, xz_direction, xz_distance)
 
 	if is_dashing:
 		dash_timer -= delta
@@ -113,7 +141,7 @@ func _physics_process(delta: float) -> void:
 func _on_collide(body: Node3D) -> void:
 	if body is Ball and velocity != Vector3.ZERO:
 		body.push(velocity, 2)
-		# TO DO:
+		# TODO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
 
