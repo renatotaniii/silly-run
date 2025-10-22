@@ -1,7 +1,7 @@
 [gd_scene load_steps=20 format=3 uid="uid://gv66p8ps1llu"]
 
 [ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://godot/player.tscn" id="1_5s166"]
-[ext_resource type="PackedScene" uid="uid://cxheyyqptgx6c" path="res://godot/ball.tscn" id="1_sscoq"]
+[ext_resource type="PackedScene" uid="uid://cxheyyqptgx6c" path="res://godot/items/ball.tscn" id="1_sscoq"]
 [ext_resource type="PackedScene" uid="uid://b74jwldku566k" path="res://assets/the_simpliest_blender_game_flight_simulator.glb" id="4_2a8c6"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fk20e"]
