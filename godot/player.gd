@@ -8,6 +8,7 @@ enum CameraModes {
 # Configurables
 @export var camera_mode: CameraModes = CameraModes.TOP_DOWN
 @export var move_speed = 10.0
+@export var turn_rate = 0.1
 @export var jump_impulse = 5.0
 @export var gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
 @export var dash_force = 100.0
@@ -24,8 +25,8 @@ enum CameraModes {
 
 # Player state
 var momentum = 1.0
-var dash_timer = 0.0
-var is_dashing = false
+var input_direction = Vector3.ZERO
+var movement_direction = Vector2.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -40,28 +41,8 @@ func _ready() -> void:
 # Returns a direction for use with e.g. speed
 func get_input_direction() -> Vector3:
 	var direction = Vector3.ZERO
-
-	if Input.is_action_pressed("move_forward"):
-		direction.z -= 1
-	if Input.is_action_pressed("move_back"):
-		direction.z += 1
-	if Input.is_action_pressed("move_right"):
-		direction.x += 1
-	if Input.is_action_pressed("move_left"):
-		direction.x -= 1
-	
-	# Original character pivoting is preserved in TOP_DOWN mode
-	if direction.length() > 0:
-		if camera_mode == CameraModes.TOP_DOWN:
-			direction = direction.normalized()
-		elif camera_mode == CameraModes.DEBUG:
-			var camera_direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z))
-			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
-			# so I just did it manually below
-			print(camera_direction)
-			direction = Vector3(camera_direction.x, 0, camera_direction.z)
-		
-		$Pivot.basis = Basis.looking_at(direction)
+	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	direction = Vector3(input_vector.x, 0, input_vector.y)
 	return direction
 
 func _physics_process(delta: float) -> void:
@@ -73,40 +54,8 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = jump_impulse
 
-	# Player momentum
-	var input_direction = get_input_direction()
-	if input_direction.length() > 0:
-		momentum = min(momentum + momentum_increase_rate * delta, max_momentum)
-	else:
-		momentum = max(momentum - momentum_decay_rate * delta, 1.0)
-
-	# Dash
-	if is_dashing:
-		print(input_direction)
-		velocity = input_direction * dash_force
-	# Stop walking velocity on dash
-	else:
-		# Apply movement
-		var target_velocity = input_direction * move_speed * momentum
-		velocity.x = target_velocity.x # can also use linear interpolation
-		velocity.z = target_velocity.z
-
-	if Input.is_action_just_pressed("dash"):
-		is_dashing = true
-		dash_timer = dash_duration
-
-	if is_dashing:
-		dash_timer -= delta
-		if dash_timer <= 0.0:
-			is_dashing = false
-	
-	move_and_slide()
-	
-	# Ball interactions
-	if ball and input_direction.length() > 0:
-		var distance = (ball.global_position - global_position).length()
-		if distance < 1.0:  # interaction range
-			ball.push(input_direction, 1.0)  # strength can be adjusted
+	_player_movement(delta)
+	move_and_slide()	
 
 func _on_collide(body: Node3D) -> void:
 	if body.name == "Ball" and velocity != Vector3.ZERO:
@@ -114,6 +63,30 @@ func _on_collide(body: Node3D) -> void:
 		# TO DO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
+
+func _player_movement(delta):
+	input_direction = get_input_direction()
+	if input_direction.length() > 0:
+		# Player momentum
+		momentum = min(momentum + momentum_increase_rate * delta, max_momentum)
+		_player_orientation(input_direction)
+		movement_direction = ($Pivot.basis * Vector3(0, 0, -1)) * move_speed * momentum
+		velocity.x = movement_direction.x
+		velocity.z = movement_direction.z 
+	else:
+		momentum = max(momentum - momentum_decay_rate * delta, 1.0)
+		velocity.x = 0
+		velocity.z = 0
+
+func _player_orientation(direction: Vector3):
+	# Get angle of input direction
+	# I have to invert the input_direction because the input and world directions are the inverse of each other
+	var target_angle = atan2(-direction.x, -direction.z)
+	# wrapf gets the smallest angle distance to desired rotation
+	var angle_diff = wrapf(target_angle - $Pivot.rotation.y, -PI, PI)
+
+	$Pivot.rotation.y += sign(angle_diff) * min(abs(angle_diff), turn_rate)
+
 
 func _input(event):
 	# Camera is moveable in DEBUG mode
