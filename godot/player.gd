@@ -65,7 +65,7 @@ func _ready() -> void:
 	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 	
 # Returns a direction for use with e.g. speed
-func get_input_direction() -> Vector3:
+func _get_input_direction() -> Vector3:
 	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	return Vector3(input_vector.x, 0, input_vector.y)
 
@@ -97,7 +97,7 @@ func _on_collide(body: Node3D) -> void:
 		# and the Velocity is detected as ZERO on collision
 
 func _player_movement(delta):
-	input_direction = get_input_direction()
+	input_direction = _get_input_direction()
 	if input_direction.length() > 0:
 		# Player momentum
 		speed_ratio = min(speed_ratio + time_to_max_speed * delta, max_speed)
@@ -116,6 +116,22 @@ func _player_orientation(direction: Vector3, delta):
 	# wrapf gets the smallest angle distance to desired rotation
 	var angle_diff = wrapf(target_angle - $Pivot.rotation.y, -PI, PI)
 	$Pivot.rotation.y += sign(angle_diff) * min(abs(angle_diff), turn_rate * delta)
+
+func _input(event):
+	# Camera is moveable in DEBUG mode
+	if camera_mode == CameraModes.DEBUG:
+		if event is InputEventMouseMotion:
+			$CameraPivot.rotation.y -= event.relative.x / camera_sensitivity
+			$CameraPivot.rotation.x -= event.relative.y / camera_sensitivity
+		if event is InputEventMouseButton:
+			if event.is_pressed():
+				var wheel_input = 0.0
+				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+					wheel_input += 1
+				if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+					wheel_input -= 1
+				var mouse_dir = $CameraPivot.basis.y * wheel_input
+				$CameraPivot/Camera3D.global_position -= mouse_dir
 
 ## Applies [modifier] (speed multiplier) to [member max_speed] of player for [duration] seconds.
 ## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Speed is reduced to 20% for 5 seconds
@@ -138,19 +154,3 @@ func apply_instant_boost(boost: float, duration: float):
 	_boosting = true
 	get_tree().create_timer(duration).timeout.connect(func(): _boosting = false)
 	
-
-func _input(event):
-	# Camera is moveable in DEBUG mode
-	if camera_mode == CameraModes.DEBUG:
-		if event is InputEventMouseMotion:
-			$CameraPivot.rotation.y -= event.relative.x / camera_sensitivity
-			$CameraPivot.rotation.x -= event.relative.y / camera_sensitivity
-		if event is InputEventMouseButton:
-			if event.is_pressed():
-				var wheel_input = 0.0
-				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-					wheel_input += 1
-				if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-					wheel_input -= 1
-				var mouse_dir = $CameraPivot.basis.y * wheel_input
-				$CameraPivot/Camera3D.global_position -= mouse_dir
