@@ -48,9 +48,12 @@ enum CameraModes {
 # Player state
 var speed_modifiers: Array[float] = [0.5]
 var turn_rate_modifiers: Array[float] = []
-var momentum = 0.0
+var speed_ratio = 0.0
 var input_direction = Vector3.ZERO
 var movement_direction = Vector2.ZERO
+
+# Tentative variable name
+var _boosting = false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -78,8 +81,12 @@ func _physics_process(delta: float) -> void:
 	# Testing application of speed modifiers
 	if !speed_modifiers.is_empty():
 		apply_speed_modifier(speed_modifiers.pop_back(), 5.0)
-
-	_player_movement(delta)
+		
+	if Input.is_action_just_pressed("dash"):
+		apply_instant_boost(60, 0.4)
+	
+	if !_boosting:
+		_player_movement(delta)
 	move_and_slide()	
 
 func _on_collide(body: Node3D) -> void:
@@ -93,12 +100,12 @@ func _player_movement(delta):
 	input_direction = get_input_direction()
 	if input_direction.length() > 0:
 		# Player momentum
-		momentum = min(momentum + time_to_max_speed * delta, max_speed)
+		speed_ratio = min(speed_ratio + time_to_max_speed * delta, max_speed)
 		_player_orientation(input_direction, delta)
 	else:
-		momentum = max(momentum - time_to_zero_speed * delta, 0.0)
+		speed_ratio = max(speed_ratio - time_to_zero_speed * delta, 0.0)
 	
-	movement_direction = ($Pivot.basis * Vector3(0, 0, -1)) * speed * momentum
+	movement_direction = ($Pivot.basis * Vector3(0, 0, -1)) * speed * speed_ratio
 	velocity.x = movement_direction.x
 	velocity.z = movement_direction.z 
 
@@ -110,17 +117,26 @@ func _player_orientation(direction: Vector3, delta):
 	var angle_diff = wrapf(target_angle - $Pivot.rotation.y, -PI, PI)
 	$Pivot.rotation.y += sign(angle_diff) * min(abs(angle_diff), turn_rate * delta)
 
-## Applies [i]modifier[/i] (speed multiplier) to [member max_speed] for [i]duration[/i] (seconds) of player.
+## Applies [modifier] (speed multiplier) to [member max_speed] of player for [duration] seconds.
 ## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Speed is reduced to 20% for 5 seconds
 func apply_speed_modifier(modifier: float, duration: float):
 	max_speed = max_speed * modifier
 	get_tree().create_timer(duration).timeout.connect(func(): max_speed = max_speed / modifier)
 
-## Applies [i]modifier[/i] (speed multiplier) to [member turn_rate] for [i]duration[/i] (seconds) of player.
+## Applies [modifier] (speed multiplier) to [member turn_rate] of player for [duration] seconds.
 ## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Turn Rate is reduced to 20% for 5 seconds	
 func apply_turn_rate_modifier(modifier: float, duration: float):
 	turn_rate = turn_rate * modifier
 	get_tree().create_timer(duration).timeout.connect(func(): turn_rate = turn_rate / modifier)
+
+## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
+## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
+func apply_instant_boost(boost: float, duration: float):
+	var boost_direction = ($Pivot.basis * Vector3(0, 0, -1)) * boost
+	velocity.x = boost_direction.x
+	velocity.z = boost_direction.z
+	_boosting = true
+	get_tree().create_timer(duration).timeout.connect(func(): _boosting = false)
 	
 
 func _input(event):
