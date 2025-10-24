@@ -1,5 +1,6 @@
-[gd_scene load_steps=20 format=3 uid="uid://gv66p8ps1llu"]
+[gd_scene load_steps=21 format=3 uid="uid://gv66p8ps1llu"]
 
+[ext_resource type="Script" uid="uid://x7glm7f7e2q6" path="res://godot/main.gd" id="1_2jwmw"]
 [ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://godot/player.tscn" id="1_5s166"]
 [ext_resource type="PackedScene" uid="uid://cxheyyqptgx6c" path="res://godot/items/ball.tscn" id="1_sscoq"]
 [ext_resource type="PackedScene" uid="uid://b74jwldku566k" path="res://assets/the_simpliest_blender_game_flight_simulator.glb" id="4_2a8c6"]
@@ -54,6 +55,7 @@ size = Vector3(8, 30, 8)
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_sscoq"]
 
 [node name="Main" type="Node"]
+script = ExtResource("1_2jwmw")
 
 [node name="Ground" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
@@ -119,22 +121,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 2, 0)
 shape = SubResource("BoxShape3D_wop1k")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 11, 0)
+transform = Transform3D(0.9659258, 0.06698731, -0.25, 0.24999999, -0.49148142, 0.83423376, -0.066987306, -0.8683079, -0.49148148, -55, 43, -66)
 shadow_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_5s166")]
 
 [node name="Ball" parent="." instance=ExtResource("1_sscoq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7311687, -2)
-max_speed = null
-max_range = null
-has_gravity = null
-air_drag_constant = null
-friction_constant = null
-shoot_speed = null
-throw_speed = null
-cast_time = null
-despawn_timer = null
 
 [node name="RampWithElevation" type="Node3D" parent="."]
 
@@ -281,3 +274,5 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="OhGodTheresAnotherOne/StaticBody3D"]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 shape = SubResource("CylinderShape3D_sscoq")
+
+[node name="ThrownInstances" type="Node3D" parent="."]
