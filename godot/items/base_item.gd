@@ -27,6 +27,7 @@ enum ActionType {
 #@onready var item_node: RigidBody3D = get_node(node_path) # not sure if this is needed
 
 # Item properties
+@export var item_name: String = "Unnamed Item"
 @export var max_speed: float = 20.0
 @export var max_range: float = 100.0
 
@@ -36,11 +37,12 @@ enum ActionType {
 @export var friction_constant: float = 0.1   
 
 @export var shoot_speed: float = 50.0
-@export var throw_speed: float = 15.0
+@export var throw_speed: float = 20.0
 @export var cast_time: float = 1.0       # multiplier
 @export var despawn_timer: float = 20.0
 
 # Physics-related
+var ground: Plane = Plane(Vector3.UP, 0)   # change to height map at some point
 var queued_action: ActionType = ActionType.NONE
 var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
@@ -71,41 +73,69 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 		ActionType.PUSH:
 			state.apply_impulse(queued_velocity)
 		ActionType.THROW:
-			var impulse = queued_direction * throw_speed
-			state.apply_impulse(impulse)
+			state.apply_impulse(queued_direction * throw_speed)
 		
 	# Reset
 	queued_action = ActionType.NONE
 	queued_direction = Vector3.ZERO
 
+
 func push(velocity: Vector3, strength_scalar: float = 1.0):
 	queued_action = ActionType.PUSH
 	queued_velocity = velocity * strength_scalar
 
-func use_throw(item_node: BaseItem, origin: Marker3D, xz_direction: Vector3, xz_distance: float):
-	origin.add_child(item_node)             # generate the node
-	item_node.position = origin.position
-	item_node.name = "Yeet"
-	
-	queued_action = ActionType.THROW
-	queued_direction = xz_direction
 
-	# displacement = initial_v * time + 0.5 * (acceleration * time^2)
-	# time = 0.5 * (sqrt(2 * acceleration * displacement + initial_v^2) * initial_v) 
-	var height = item_node.position.y + 2             # TODO: change to ground intercept
-	var ground_velocity = xz_direction * throw_speed  # throw parallel to ground
-	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / (gravity * gravity_scale)   # u = 0
-	var theoretical_distance = (ground_velocity * time_to_ground).length()          # a = 0
+func get_theoretical_throw_distance(origin: Vector3):
+	var height = ground.distance_to(origin)
 	
-	print("Ground speed: ", ground_velocity.length())
-	print("Velocity vector: ", ground_velocity) 
+	# displacement = initial_v * time + 0.5 * (acceleration * time^2)
+	# time = sqrt(2 * acceleration * distance + initial_u^2) - initial_u / acceleration
+	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / (gravity * gravity_scale)   # u = 0
+	var theoretical_distance = throw_speed * time_to_ground
+	
+	# Debugging
 	print("Time: ", time_to_ground)
 	print("Theoretical distance: ", theoretical_distance)
+	
+	return theoretical_distance
+
+
+func calculate_throw_angle(xz_distance: Vector3, throw_origin: Vector3):
+	
+	
+	pass
+
+
+func use_throw(
+	item_node: BaseItem, 
+	throw_origin: Marker3D, 
+	world: Node3D, 
+	player_to_cursor: Vector3, 
+	global_mouse_pos: Vector3
+	):
+	throw_speed = 20.0
+		
+	world.add_child(item_node)
+	item_node.global_position = throw_origin.global_position
+	item_node.name = "Yeet"
+	
+	# TODO: Fix either player_to_cursor or item_node.position. 
+	#       Currently the ball is undershooting. 
+	queued_action = ActionType.THROW
+	queued_direction = player_to_cursor.normalized()
+	
+	var dx = player_to_cursor.x
+	var dz = player_to_cursor.z
+	var xz_distance = Vector3(dx, 0, dz).length()
+	
+	var theoretical_distance = get_theoretical_throw_distance(item_node.position)
 	
 	# Choose throw angle above or below XZ-plane
 	if xz_distance < theoretical_distance:
 		print("-- Near --")
-	elif xz_distance >= theoretical_distance:
+		throw_speed = 25
+		queued_direction = (global_mouse_pos - item_node.global_position).normalized()
+	elif xz_distance <= max_range:
 		print("-- Far --")
 	else:
 		print("Something is wrong...")

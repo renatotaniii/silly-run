@@ -22,8 +22,12 @@ var momentum = 1.0
 var dash_timer = 0.0
 var is_dashing = false
 
-# Item declarations
+# Node declarations
 var Ball = preload("res://godot/items/ball.tscn")
+
+
+func _init() -> void:
+	pass
 
 
 func _ready() -> void:
@@ -51,13 +55,13 @@ func _physics_process(delta: float) -> void:
 	if input_direction.length() > 0:
 		momentum = min(momentum + momentum_increase_rate * delta, max_momentum)
 	else:
-		momentum = max(momentum - momentum_decay_rate * delta, 1.0)
+		momentum = max(momentum - (momentum_decay_rate * delta), 1.0)
 
 	# Dash
 	if is_dashing:
 		print(input_direction)
 		velocity = input_direction * dash_force
-	# Stop walking velocity on dash
+		# Stop walking velocity on dash
 	else:
 		# Apply movement
 		var target_velocity = input_direction * move_speed * momentum
@@ -68,23 +72,17 @@ func _physics_process(delta: float) -> void:
 		is_dashing = true
 		dash_timer = dash_duration
 		
-	if Input.is_action_just_pressed("throw_object"): # ray
-		var mouse_pos = get_mouse_pos()          # point
+	if Input.is_action_just_pressed("throw_object"): 
+		var origin = self.get_node("Pivot/ThrowOrigin")
+		var world_location = self.get_node("../ThrownInstances")
 		
-		var resultant = mouse_pos - global_position
-		var dx = resultant.x
-		var dz = resultant.z
-		var xz_direction = Vector3(dx, 0, dz).normalized()
-		var xz_distance = sqrt(dx**2 + dz**2)
-		
+		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+		var player_to_cursor = global_mouse_pos - self.global_position  # Vector3
+
 		# TODO: Combine with inventory system. For now, we'll just use a ball.
-		var item = Ball.instantiate()    # node
-		
-		# TODO: Adjust ThrowOrigin (Marker3D) according to player proportions.
-		# https://docs.godotengine.org/en/stable/tutorials/physics/using_character_body_2d.html#bouncing-reflecting      
-		var origin = $Pivot/ThrowOrigin
-		
-		item.use_throw(item, origin, xz_direction, xz_distance)
+		var item = Ball.instantiate()
+
+		item.use_throw(item, origin, world_location, player_to_cursor, global_mouse_pos)
 
 	if is_dashing:
 		dash_timer -= delta
@@ -150,7 +148,7 @@ func get_input_direction() -> Vector3:
 func get_mouse_pos():
 	# TODO: Use a height map? When clicking on an elevation, parallax is
 	#       not being taken into account.
-	var plane = Plane(Vector3.UP, -1)  # XZ-plane at Y=-1
+	var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
 	var mouse_pos = get_viewport().get_mouse_position()
 	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
 	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
