@@ -30,7 +30,7 @@ enum ActionType {
 @export var max_speed: float = 20.0
 @export var max_range: float = 100.0
 
-@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") # change using gravity_scale 
+@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
 @export var has_gravity: bool = true
 @export var air_drag_constant: float = 0.1
 @export var friction_constant: float = 0.1   
@@ -92,9 +92,9 @@ func use_throw(item_node: BaseItem, origin: Marker3D, xz_direction: Vector3, xz_
 
 	# displacement = initial_v * time + 0.5 * (acceleration * time^2)
 	# time = 0.5 * (sqrt(2 * acceleration * displacement + initial_v^2) * initial_v) 
-	var height = item_node.position.y                 # TODO: change to ground intercept
+	var height = item_node.position.y + 2             # TODO: change to ground intercept
 	var ground_velocity = xz_direction * throw_speed  # throw parallel to ground
-	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / gravity # u = 0
+	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / (gravity * gravity_scale)   # u = 0
 	var theoretical_distance = (ground_velocity * time_to_ground).length()          # a = 0
 	
 	print("Ground speed: ", ground_velocity.length())

@@ -30,8 +30,8 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE # from _CAPTURED, _VISIBLE
 	# Set the camera mode in the inspector
 	if camera_mode == CameraModes.TOP_DOWN:
-		$CameraPivot/Camera3D.position = Vector3(0, 20, 0)
-		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
+		$CameraPivot/Camera3D.position = Vector3(0, 30, 0)
+		$CameraPivot/Camera3D.rotation = Vector3(-0.9*PI/2, 0, 0)
 	elif camera_mode == CameraModes.DEBUG:
 		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
 		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
@@ -150,7 +150,7 @@ func get_input_direction() -> Vector3:
 func get_mouse_pos():
 	# TODO: Use a height map? When clicking on an elevation, parallax is
 	#       not being taken into account.
-	var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+	var plane = Plane(Vector3.UP, -1)  # XZ-plane at Y=-1
 	var mouse_pos = get_viewport().get_mouse_position()
 	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
 	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
