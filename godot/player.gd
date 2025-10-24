@@ -17,23 +17,13 @@ enum CameraModes {
 @export var max_momentum = 2.0
 @export var camera_sensitivity := 500
 
-"""
-NOTE: Keeping this part here until it is sure that the way items are interacted with is robust
-      (see _on_collide)
-
-# Ball reference (Set ball node path in the inspector)
-@export var ball_node: Ball
-@onready var ball: RigidBody3D = get_node("../Ball")
-"""
-
 # Player state
 var momentum = 1.0
 var dash_timer = 0.0
 var is_dashing = false
 
-
 # Item declarations
-var Ball = preload("res://godot/ball.tscn")
+var Ball = preload("res://godot/items/ball.tscn")
 
 
 func _ready() -> void:
@@ -45,34 +35,6 @@ func _ready() -> void:
 	elif camera_mode == CameraModes.DEBUG:
 		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
 		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
-
-
-# Returns a direction for use with e.g. speed
-func get_input_direction() -> Vector3:
-	var direction = Vector3.ZERO
-
-	if Input.is_action_pressed("move_forward"):
-		direction.z -= 1
-	if Input.is_action_pressed("move_back"):
-		direction.z += 1
-	if Input.is_action_pressed("move_right"):
-		direction.x += 1
-	if Input.is_action_pressed("move_left"):
-		direction.x -= 1
-	
-	# Original character pivoting is preserved in TOP_DOWN mode
-	if direction.length() > 0:
-		if camera_mode == CameraModes.TOP_DOWN:
-			direction = direction.normalized()
-		elif camera_mode == CameraModes.DEBUG:
-			var camera_direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z))
-			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
-			# so I just did it manually below
-			print(camera_direction)
-			direction = Vector3(camera_direction.x, 0, camera_direction.z)
-		
-		$Pivot.basis = Basis.looking_at(direction)
-	return direction
 
 
 func _physics_process(delta: float) -> void:
@@ -106,14 +68,8 @@ func _physics_process(delta: float) -> void:
 		is_dashing = true
 		dash_timer = dash_duration
 		
-	if Input.is_action_just_pressed("throw_object"):
-		# TODO: Use a height map? When clicking on an elevation, parallax is
-		#       not being taken into account.
-		var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
-		var mouse_pos = get_viewport().get_mouse_position()
-		var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
-		var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
-		mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+	if Input.is_action_just_pressed("throw_object"): # ray
+		var mouse_pos = get_mouse_pos()          # point
 		
 		var resultant = mouse_pos - global_position
 		var dx = resultant.x
@@ -161,3 +117,43 @@ func _input(event):
 					wheel_input -= 1
 				var mouse_dir = $CameraPivot.basis.y * wheel_input
 				$CameraPivot/Camera3D.global_position -= mouse_dir
+
+
+# Returns a direction for use with e.g. speed
+func get_input_direction() -> Vector3:
+	var direction = Vector3.ZERO
+
+	if Input.is_action_pressed("move_forward"):
+		direction.z -= 1
+	if Input.is_action_pressed("move_back"):
+		direction.z += 1
+	if Input.is_action_pressed("move_right"):
+		direction.x += 1
+	if Input.is_action_pressed("move_left"):
+		direction.x -= 1
+	
+	# Original character pivoting is preserved in TOP_DOWN mode
+	if direction.length() > 0:
+		if camera_mode == CameraModes.TOP_DOWN:
+			direction = direction.normalized()
+		elif camera_mode == CameraModes.DEBUG:
+			var camera_direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z))
+			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
+			# so I just did it manually below
+			print(camera_direction)
+			direction = Vector3(camera_direction.x, 0, camera_direction.z)
+		
+		$Pivot.basis = Basis.looking_at(direction)
+	return direction
+
+
+func get_mouse_pos():
+	# TODO: Use a height map? When clicking on an elevation, parallax is
+	#       not being taken into account.
+	var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+	var mouse_pos = get_viewport().get_mouse_position()
+	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
+	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
+	mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+	
+	return mouse_pos

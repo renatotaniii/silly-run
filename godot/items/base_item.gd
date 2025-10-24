@@ -16,25 +16,33 @@ Methods:
 """
 enum ActionType { 
 	NONE, 
+	PUSH,
 	THROW, 
 	SHOOT, 
+	PLACE,
 }
 
 # Item references
-@export var node_path: NodePath
+#@export var node_path: NodePath
 #@onready var item_node: RigidBody3D = get_node(node_path) # not sure if this is needed
 
 # Item properties
 @export var max_speed: float = 20.0
-@export var max_distance: float = 100.0
+@export var max_range: float = 100.0
+
 @export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") # change using gravity_scale 
 @export var has_gravity: bool = true
-@export var drag: float = 0.1  
+@export var air_drag_constant: float = 0.1
+@export var friction_constant: float = 0.1   
+
 @export var shoot_speed: float = 50.0
 @export var throw_speed: float = 15.0
+@export var cast_time: float = 1.0       # multiplier
+@export var despawn_timer: float = 20.0
 
 # Physics-related
 var queued_action: ActionType = ActionType.NONE
+var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
 var max_check_distance: float = 100.0 
 
@@ -49,6 +57,7 @@ func _ready() -> void:
 	connect("body_entered", Callable(self, "_on_body_entered"))
 
 func _on_body_entered(body: Node) -> void:
+	# TODO: Write logic for despawning items
 	var collision_time = Time.get_ticks_msec() / 1000.0
 	var lifetime = collision_time - spawn_time
 	print("Collided with: ", body.name)
@@ -59,6 +68,8 @@ func _on_body_entered(body: Node) -> void:
 # Real stuff
 func _integrate_forces(state: PhysicsDirectBodyState3D):
 	match queued_action:
+		ActionType.PUSH:
+			state.apply_impulse(queued_velocity)
 		ActionType.THROW:
 			var impulse = queued_direction * throw_speed
 			state.apply_impulse(impulse)
@@ -68,7 +79,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 	queued_direction = Vector3.ZERO
 
 func push(velocity: Vector3, strength_scalar: float = 1.0):
-	apply_impulse(velocity * strength_scalar)
+	queued_action = ActionType.PUSH
+	queued_velocity = velocity * strength_scalar
 
 func use_throw(item_node: BaseItem, origin: Marker3D, xz_direction: Vector3, xz_distance: float):
 	origin.add_child(item_node)             # generate the node
