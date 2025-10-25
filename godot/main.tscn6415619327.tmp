@@ -128,6 +128,16 @@ shadow_enabled = true
 
 [node name="Ball" parent="." instance=ExtResource("1_sscoq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7311687, -2)
+item_name = null
+max_speed = null
+max_range = null
+has_gravity = null
+air_drag_constant = null
+friction_constant = null
+shoot_speed = null
+throw_speed = null
+cast_time = null
+despawn_timer = null
 
 [node name="RampWithElevation" type="Node3D" parent="."]
 
