@@ -100,15 +100,19 @@ func get_theoretical_throw_distance(origin: Vector3):
 	return theoretical_distance
 
 
-func calculate_throw_angle(xz_distance: Vector3, throw_origin: Vector3):
+func calculate_throw_transformation(direction: Vector3, xz_distance: float, throw_origin: Vector3):
+	# TODO: WTF IS HAPPENING
+	var g = gravity * gravity_scale
+	var discriminant = 1 - g * (g * (xz_distance**2) + (2 * throw_origin.y * throw_speed)) / (throw_speed**4)
+	var angle = atan((throw_speed**2 / (g * xz_distance)) * (1 + sqrt(discriminant)))
+	var matrix_transform = Vector3(direction.x * cos(angle), throw_speed * sin(angle), direction.z * cos(angle))
 	
-	
-	pass
+	return matrix_transform.normalized()
 
 
 func use_throw(
 	item_node: BaseItem, 
-	throw_origin: Marker3D, 
+	origin_node: Marker3D, 
 	world: Node3D, 
 	player_to_cursor: Vector3, 
 	global_mouse_pos: Vector3
@@ -116,7 +120,7 @@ func use_throw(
 	throw_speed = 20.0
 		
 	world.add_child(item_node)
-	item_node.global_position = throw_origin.global_position
+	item_node.global_position = origin_node.global_position
 	item_node.name = "Yeet"
 	
 	# TODO: Fix either player_to_cursor or item_node.position. 
@@ -135,8 +139,10 @@ func use_throw(
 		print("-- Near --")
 		throw_speed = 25
 		queued_direction = (global_mouse_pos - item_node.global_position).normalized()
-	elif xz_distance <= max_range:
+	elif theoretical_distance <= xz_distance:
 		print("-- Far --")
+		xz_distance = min(xz_distance, max_range)
+		queued_direction = calculate_throw_transformation(queued_direction, xz_distance, item_node.global_position)
 	else:
 		print("Something is wrong...")
 
