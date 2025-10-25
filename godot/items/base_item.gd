@@ -111,17 +111,12 @@ func calculate_throw_transformation(direction: Vector3, xz_distance: float, thro
 
 
 func use_throw(
-	item_node: BaseItem, 
-	origin_node: Marker3D, 
-	world: Node3D, 
 	player_to_cursor: Vector3, 
 	global_mouse_pos: Vector3
 	):
 	throw_speed = 20.0
 		
-	world.add_child(item_node)
-	item_node.global_position = origin_node.global_position
-	item_node.name = "Yeet"
+	self.name = "Yeet"
 	
 	# TODO: Fix either player_to_cursor or item_node.position. 
 	#       Currently the ball is undershooting. 
@@ -132,17 +127,17 @@ func use_throw(
 	var dz = player_to_cursor.z
 	var xz_distance = Vector3(dx, 0, dz).length()
 	
-	var theoretical_distance = get_theoretical_throw_distance(item_node.position)
+	var theoretical_distance = get_theoretical_throw_distance(self.position)
 	
 	# Choose throw angle above or below XZ-plane
 	if xz_distance < theoretical_distance:
 		print("-- Near --")
 		throw_speed = 25
-		queued_direction = (global_mouse_pos - item_node.global_position).normalized()
+		queued_direction = (global_mouse_pos - self.global_position).normalized()
 	elif theoretical_distance <= xz_distance:
 		print("-- Far --")
 		xz_distance = min(xz_distance, max_range)
-		queued_direction = calculate_throw_transformation(queued_direction, xz_distance, item_node.global_position)
+		queued_direction = calculate_throw_transformation(queued_direction, xz_distance, self.global_position)
 	else:
 		print("Something is wrong...")
 

@@ -15,6 +15,10 @@ run/main_scene="uid://gv66p8ps1llu"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+ItemManager="*res://godot/item_manager.gd"
+
 [filesystem]
 
 import/blender/enabled=false

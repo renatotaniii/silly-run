@@ -55,10 +55,6 @@ var movement_direction = Vector2.ZERO
 # Tentative variable name
 var _boosting = false
 
-# Node declarations
-var Ball = preload("res://godot/items/ball.tscn")
-
-
 func _init() -> void:
 	pass
 
@@ -99,17 +95,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()	
 		
 	if Input.is_action_just_pressed("throw_object"): 
-		var origin = self.get_node("Pivot/ThrowOrigin")
-		var world_location = self.get_node("../ThrownInstances")
-		
 		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		var player_to_cursor = global_mouse_pos - self.global_position  # Vector3
+		ItemManager.activate_item(self, global_mouse_pos, "Ball")
 
-		# TODO: Combine with inventory system. For now, we'll just use a ball.
-		var item = Ball.instantiate()
-
-		item.use_throw(item, origin, world_location, player_to_cursor, global_mouse_pos)
-	
 	move_and_slide()
 
 
