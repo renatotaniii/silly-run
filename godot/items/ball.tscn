@@ -1,0 +1,25 @@
+[gd_scene load_steps=6 format=3 uid="uid://cxheyyqptgx6c"]
+
+[ext_resource type="Script" uid="uid://c3gl8gxfs6drl" path="res://godot/items/ball.gd" id="1_dq3un"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_2oo46"]
+friction = 0.4
+bounce = 0.4
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_5s166"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_sscoq"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wop1k"]
+albedo_color = Color(0.7165119, 0.65688205, 0.31454715, 1)
+
+[node name="Ball" type="RigidBody3D"]
+physics_material_override = SubResource("PhysicsMaterial_2oo46")
+script = ExtResource("1_dq3un")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_5s166")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_sscoq")
+surface_material_override/0 = SubResource("StandardMaterial3D_wop1k")
