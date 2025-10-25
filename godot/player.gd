@@ -1,21 +1,44 @@
 extends CharacterBody3D
 
 enum CameraModes {
+	## Player Camera
 	TOP_DOWN,
+	## Debug Camera
 	DEBUG,
 }
 
 # Configurables
-@export var camera_mode: CameraModes = CameraModes.TOP_DOWN
-@export var move_speed = 10.0
 @export var jump_impulse = 5.0
 @export var gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
-@export var dash_force = 100.0
-@export var dash_duration = 0.1
-@export var momentum_increase_rate = 3.0
-@export var momentum_decay_rate = 4.0
-@export var max_momentum = 2.0
+
+@export_category("Camera Settings")
+
+@export var camera_mode: CameraModes = CameraModes.TOP_DOWN
+## :D
 @export var camera_sensitivity := 500
+
+@export_category("Speed Modifiers")
+## Max speed dictates the player's [member Speed] after fully accelerating. [br]
+## Default max speed is 1.0 [i](100% movement speed)[/i]
+@export var max_speed := 1.0
+
+## Player's movement speed
+@export var speed := 20.0
+
+## Player's rotation speed. Rate is measured in radians per second. [br]
+## Default is 2 PI per second
+@export var turn_rate := 2 * PI
+
+## Describes time until [member max_speed] is reached. [br]
+## Default is 1.0 (1 second to reach max speed)
+@export var time_to_max_speed := 1.0
+
+## Describes time until 0 speed is reached. [br]
+## Default is 1.0 (1 second to full stop)
+@export var time_to_zero_speed := 1.0
+
+
+@export_category("Misc")
 
 # Ball reference (Set ball node path in the inspector)
 @export var ball_node_path: NodePath
@@ -23,46 +46,28 @@ enum CameraModes {
 
 
 # Player state
-var momentum = 1.0
-var dash_timer = 0.0
-var is_dashing = false
+var speed_modifiers: Array[float] = [0.5]
+var turn_rate_modifiers: Array[float] = []
+var speed_ratio = 0.0
+var input_direction = Vector3.ZERO
+var movement_direction = Vector2.ZERO
+
+# Tentative variable name
+var _boosting = false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	# Set the camera mode in the inspector
 	if camera_mode == CameraModes.TOP_DOWN:
 		$CameraPivot/Camera3D.position = Vector3(0, 20, 0)
-		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 	elif camera_mode == CameraModes.DEBUG:
 		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
-		$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
-
-# Returns a direction for use with e.g. speed
-func get_input_direction() -> Vector3:
-	var direction = Vector3.ZERO
-
-	if Input.is_action_pressed("move_forward"):
-		direction.z -= 1
-	if Input.is_action_pressed("move_back"):
-		direction.z += 1
-	if Input.is_action_pressed("move_right"):
-		direction.x += 1
-	if Input.is_action_pressed("move_left"):
-		direction.x -= 1
+	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 	
-	# Original character pivoting is preserved in TOP_DOWN mode
-	if direction.length() > 0:
-		if camera_mode == CameraModes.TOP_DOWN:
-			direction = direction.normalized()
-		elif camera_mode == CameraModes.DEBUG:
-			var camera_direction = ($CameraPivot.global_transform.basis * Vector3(direction.x, 0, direction.z))
-			# For some reason multiplying the camera pivot basis y value to 0 doesn't remove it 
-			# so I just did it manually below
-			print(camera_direction)
-			direction = Vector3(camera_direction.x, 0, camera_direction.z)
-		
-		$Pivot.basis = Basis.looking_at(direction)
-	return direction
+# Returns a direction for use with e.g. speed
+func _get_input_direction() -> Vector3:
+	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	return Vector3(input_vector.x, 0, input_vector.y)
 
 func _physics_process(delta: float) -> void:
 	# Vertical velocity
@@ -72,41 +77,17 @@ func _physics_process(delta: float) -> void:
 	else:
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = jump_impulse
-
-	# Player momentum
-	var input_direction = get_input_direction()
-	if input_direction.length() > 0:
-		momentum = min(momentum + momentum_increase_rate * delta, max_momentum)
-	else:
-		momentum = max(momentum - momentum_decay_rate * delta, 1.0)
-
-	# Dash
-	if is_dashing:
-		print(input_direction)
-		velocity = input_direction * dash_force
-	# Stop walking velocity on dash
-	else:
-		# Apply movement
-		var target_velocity = input_direction * move_speed * momentum
-		velocity.x = target_velocity.x # can also use linear interpolation
-		velocity.z = target_velocity.z
-
+			
+	# Testing application of speed modifiers
+	if !speed_modifiers.is_empty():
+		apply_speed_modifier(speed_modifiers.pop_back(), 5.0)
+		
 	if Input.is_action_just_pressed("dash"):
-		is_dashing = true
-		dash_timer = dash_duration
-
-	if is_dashing:
-		dash_timer -= delta
-		if dash_timer <= 0.0:
-			is_dashing = false
+		apply_instant_boost(60, 0.4)
 	
-	move_and_slide()
-	
-	# Ball interactions
-	if ball and input_direction.length() > 0:
-		var distance = (ball.global_position - global_position).length()
-		if distance < 1.0:  # interaction range
-			ball.push(input_direction, 1.0)  # strength can be adjusted
+	if !_boosting:
+		_player_movement(delta)
+	move_and_slide()	
 
 func _on_collide(body: Node3D) -> void:
 	if body.name == "Ball" and velocity != Vector3.ZERO:
@@ -114,6 +95,27 @@ func _on_collide(body: Node3D) -> void:
 		# TO DO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
+
+func _player_movement(delta):
+	input_direction = _get_input_direction()
+	if input_direction.length() > 0:
+		# Player momentum
+		speed_ratio = min(speed_ratio + time_to_max_speed * delta, max_speed)
+		_player_orientation(input_direction, delta)
+	else:
+		speed_ratio = max(speed_ratio - time_to_zero_speed * delta, 0.0)
+	
+	movement_direction = ($Pivot.basis * Vector3(0, 0, -1)) * speed * speed_ratio
+	velocity.x = movement_direction.x
+	velocity.z = movement_direction.z 
+
+func _player_orientation(direction: Vector3, delta):
+	# Get angle of input direction
+	# I have to invert the input_direction because the input and world directions are the inverse of each other
+	var target_angle = atan2(-direction.x, -direction.z)
+	# wrapf gets the smallest angle distance to desired rotation
+	var angle_diff = wrapf(target_angle - $Pivot.rotation.y, -PI, PI)
+	$Pivot.rotation.y += sign(angle_diff) * min(abs(angle_diff), turn_rate * delta)
 
 func _input(event):
 	# Camera is moveable in DEBUG mode
@@ -130,3 +132,25 @@ func _input(event):
 					wheel_input -= 1
 				var mouse_dir = $CameraPivot.basis.y * wheel_input
 				$CameraPivot/Camera3D.global_position -= mouse_dir
+
+## Applies [modifier] (speed multiplier) to [member max_speed] of player for [duration] seconds.
+## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Speed is reduced to 20% for 5 seconds
+func apply_speed_modifier(modifier: float, duration: float):
+	max_speed = max_speed * modifier
+	get_tree().create_timer(duration).timeout.connect(func(): max_speed = max_speed / modifier)
+
+## Applies [modifier] (speed multiplier) to [member turn_rate] of player for [duration] seconds.
+## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Turn Rate is reduced to 20% for 5 seconds	
+func apply_turn_rate_modifier(modifier: float, duration: float):
+	turn_rate = turn_rate * modifier
+	get_tree().create_timer(duration).timeout.connect(func(): turn_rate = turn_rate / modifier)
+
+## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
+## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
+func apply_instant_boost(boost: float, duration: float):
+	var boost_direction = ($Pivot.basis * Vector3(0, 0, -1)) * boost
+	velocity.x = boost_direction.x
+	velocity.z = boost_direction.z
+	_boosting = true
+	get_tree().create_timer(duration).timeout.connect(func(): _boosting = false)
+	
