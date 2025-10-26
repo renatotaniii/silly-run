@@ -71,9 +71,11 @@ func _on_body_entered(body: Node) -> void:
 func _integrate_forces(state: PhysicsDirectBodyState3D):
 	match queued_action:
 		ActionType.PUSH:
-			state.apply_impulse(queued_velocity)
+			state.apply_central_impulse(queued_velocity)
 		ActionType.THROW:
-			state.apply_impulse(queued_direction * throw_speed)
+			state.apply_central_impulse(queued_direction * throw_speed * self.mass)
+		ActionType.SHOOT:
+			state.apply_central_impulse(queued_direction * shoot_speed)
 		
 	# Reset
 	queued_action = ActionType.NONE
@@ -84,62 +86,33 @@ func push(velocity: Vector3, strength_scalar: float = 1.0):
 	queued_action = ActionType.PUSH
 	queued_velocity = velocity * strength_scalar
 
-
-func get_theoretical_throw_distance(origin: Vector3):
-	var height = ground.distance_to(origin)
-	
-	# displacement = initial_v * time + 0.5 * (acceleration * time^2)
-	# time = sqrt(2 * acceleration * distance + initial_u^2) - initial_u / acceleration
-	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / (gravity * gravity_scale)   # u = 0
-	var theoretical_distance = throw_speed * time_to_ground
-	
-	# Debugging
-	print("Time: ", time_to_ground)
-	print("Theoretical distance: ", theoretical_distance)
-	
-	return theoretical_distance
-
-
-func calculate_throw_transformation(direction: Vector3, xz_distance: float, throw_origin: Vector3):
-	# TODO: WTF IS HAPPENING
-	var g = gravity * gravity_scale
-	var discriminant = 1 - g * (g * (xz_distance**2) + (2 * throw_origin.y * throw_speed)) / (throw_speed**4)
-	var angle = atan((throw_speed**2 / (g * xz_distance)) * (1 + sqrt(discriminant)))
-	var matrix_transform = Vector3(direction.x * cos(angle), throw_speed * sin(angle), direction.z * cos(angle))
-	
-	return matrix_transform.normalized()
-
-
-func use_throw(
-	player_to_cursor: Vector3, 
-	global_mouse_pos: Vector3
-	):
-	throw_speed = 20.0
-		
+# Calculates a throw direction using horizontal throw_speed and distance to the player
+func use_throw(player_to_cursor: Vector3):
 	self.name = "Yeet"
-	
-	# TODO: Fix either player_to_cursor or item_node.position. 
-	#       Currently the ball is undershooting. 
 	queued_action = ActionType.THROW
-	queued_direction = player_to_cursor.normalized()
-	
-	var dx = player_to_cursor.x
-	var dz = player_to_cursor.z
-	var xz_distance = Vector3(dx, 0, dz).length()
-	
-	var theoretical_distance = get_theoretical_throw_distance(self.position)
-	
-	# Choose throw angle above or below XZ-plane
-	if xz_distance < theoretical_distance:
-		print("-- Near --")
-		throw_speed = 25
-		queued_direction = (global_mouse_pos - self.global_position).normalized()
-	elif theoretical_distance <= xz_distance:
-		print("-- Far --")
-		xz_distance = min(xz_distance, max_range)
-		queued_direction = calculate_throw_transformation(queued_direction, xz_distance, self.global_position)
-	else:
-		print("Something is wrong...")
 
-func shoot_projectile(direction: Vector3):
-	pass
+	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
+	var xz_direction = xz_component.normalized()
+	var xz_distance = xz_component.length()
+	
+	xz_distance = min(xz_distance, max_range)
+	
+	# Closed form: theta = arctan(gravity * total_range / 2 * horizontal_u^2 - height / total_range)
+	var g = gravity * gravity_scale
+	var height = self.position.y
+	var first_term = (g * xz_distance) / (2 * (throw_speed**2))
+	var second_term = height / xz_distance
+	var angle = clamp(atan(first_term - second_term), -PI/2, PI/4)
+	
+	xz_direction.y = tan(angle)
+	queued_direction = xz_direction
+	
+	
+func shoot_projectile(player_to_cursor: Vector3):
+	self.name = "Bang"
+	queued_action = ActionType.SHOOT
+
+	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
+	var xz_direction = xz_component.normalized()
+	
+	queued_direction = xz_direction

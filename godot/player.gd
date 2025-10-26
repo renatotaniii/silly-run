@@ -157,6 +157,7 @@ func apply_turn_rate_modifier(modifier: float, duration: float):
 	turn_rate = turn_rate * modifier
 	get_tree().create_timer(duration).timeout.connect(func(): turn_rate = turn_rate / modifier)
 
+
 ## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
 ## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
 func apply_instant_boost(boost: float, duration: float):
@@ -170,10 +171,10 @@ func apply_instant_boost(boost: float, duration: float):
 func get_mouse_pos():
 	# TODO: Use a height map? When clicking on an elevation, parallax is
 	#       not being taken into account.
-	var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+	var ground_plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
 	var mouse_pos = get_viewport().get_mouse_position()
 	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
 	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
-	mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
 	
 	return mouse_pos
