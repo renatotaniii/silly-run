@@ -4,15 +4,9 @@ extends RigidBody3D
 Base class from which items are built upon on.
 For each item, create an associated script that extends this class.
 
-NOTE: In scripts that inherit this class (like ball.gd), you can
-              access the parent variables directly as if it were declared 
-              in your script, e.g, changing the weight without declaring it.
-
-Methods:
-- push(velocity: Vector3, strength_scalar: float = 1.0)
-- use_throw(item_node: BaseItem, origin: Marker3D, xz_direction: Vector3, xz_distance: float)
-- 
-
+In scripts that inherit this class (like ball.gd), you can access the parent 
+variables directly as if it were declared in your script. If they are to be
+overwritten, set them in _init().
 """
 enum ActionType { 
 	NONE, 
@@ -22,31 +16,25 @@ enum ActionType {
 	PLACE,
 }
 
-# Item references
-#@export var node_path: NodePath
-#@onready var item_node: RigidBody3D = get_node(node_path) # not sure if this is needed
-
-# Item properties
+@export_category("Item Properies")
 @export var item_name: String = "Unnamed Item"
 @export var max_speed: float = 20.0
 @export var max_range: float = 100.0
-
-@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
-@export var has_gravity: bool = true
-@export var air_drag_constant: float = 0.1
-@export var friction_constant: float = 0.1   
-
-@export var shoot_speed: float = 50.0
-@export var throw_speed: float = 20.0
+@export var shoot_speed: float = 50.0    # horizontal speed
+@export var throw_speed: float = 20.0    # horizontal speed
 @export var cast_time: float = 1.0       # multiplier
 @export var despawn_timer: float = 20.0
 
+@export_category("World Properties")
+@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
+@export var air_drag_constant: float = 0.1
+@export var friction_constant: float = 0.1   
+
 # Physics-related
-var ground: Plane = Plane(Vector3.UP, 0)   # change to height map at some point
+var ground: Plane = Plane(Vector3.UP, 0)         # NOTE: change to height map at some point
 var queued_action: ActionType = ActionType.NONE
 var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
-var max_check_distance: float = 100.0 
 
 # DEBUG STUFF
 var spawn_time = 0.0
@@ -58,6 +46,7 @@ func _ready() -> void:
 	max_contacts_reported = 1
 	connect("body_entered", Callable(self, "_on_body_entered"))
 
+
 func _on_body_entered(body: Node) -> void:
 	# TODO: Write logic for despawning items
 	var collision_time = Time.get_ticks_msec() / 1000.0
@@ -66,7 +55,8 @@ func _on_body_entered(body: Node) -> void:
 	print("Lifetime: ", lifetime, "seconds\n")
 
 	queue_free()  # delete node
-	
+
+
 # Real stuff
 func _integrate_forces(state: PhysicsDirectBodyState3D):
 	match queued_action:
@@ -76,6 +66,8 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 			state.apply_central_impulse(queued_direction * throw_speed * self.mass)
 		ActionType.SHOOT:
 			state.apply_central_impulse(queued_direction * shoot_speed)
+		ActionType.PLACE:
+			pass
 		
 	# Reset
 	queued_action = ActionType.NONE
@@ -85,6 +77,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 func push(velocity: Vector3, strength_scalar: float = 1.0):
 	queued_action = ActionType.PUSH
 	queued_velocity = velocity * strength_scalar
+
 
 # Calculates a throw direction using horizontal throw_speed and distance to the player
 func use_throw(player_to_cursor: Vector3):
@@ -116,3 +109,10 @@ func shoot_projectile(player_to_cursor: Vector3):
 	var xz_direction = xz_component.normalized()
 	
 	queued_direction = xz_direction
+	
+	
+func place_item(global_cursor_pos: Vector3):
+	self.name = "Tombstone"
+	queued_action = ActionType.PLACE
+	
+	self.global_position = global_cursor_pos
