@@ -53,7 +53,6 @@ func _on_body_entered(body: Node) -> void:
 	var lifetime = collision_time - spawn_time
 	print("Collided with: ", body.name)
 	print("Lifetime: ", lifetime, "seconds\n")
-
 	queue_free()  # delete node
 
 
@@ -112,7 +111,7 @@ func shoot_projectile(player_to_cursor: Vector3):
 	
 	
 func place_item(global_cursor_pos: Vector3):
-	self.name = "Tombstone"
+	self.name = "Park"
 	queued_action = ActionType.PLACE
 	
 	self.global_position = global_cursor_pos
