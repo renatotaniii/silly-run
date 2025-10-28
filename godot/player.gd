@@ -55,9 +55,14 @@ var movement_direction = Vector2.ZERO
 # Tentative variable name
 var _boosting = false
 
+# Status effect flags
+var _frozen = false
+var _ragdolled = false
+var _rooted = true
+var _slowed = false
+
 func _init() -> void:
 	pass
-
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE # from _CAPTURED, _VISIBLE
@@ -71,35 +76,30 @@ func _ready() -> void:
 	
 # Returns a direction for use with e.g. speed
 func _get_input_direction() -> Vector3:
-	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	return Vector3(input_vector.x, 0, input_vector.y)
+	if !_frozen and !_ragdolled:
+		var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+		return Vector3(input_vector.x, 0, input_vector.y)
+	return Vector3(0,0,0)
 
-func _physics_process(delta: float) -> void:
-	# Vertical velocity
-	if not is_on_floor():
-		# final_v = initial_v + (-gravity * time)
-		velocity.y -= gravity * delta
-	else:
-		if Input.is_action_just_pressed("jump"):
-			velocity.y = jump_impulse
-			
+func _physics_process(delta: float) -> void:	
 	# Testing application of speed modifiers
 	if !speed_modifiers.is_empty():
 		apply_speed_modifier(speed_modifiers.pop_back(), 5.0)
-		
-	if Input.is_action_just_pressed("dash"):
-		apply_instant_boost(60, 0.4)
-	
-	if !_boosting:
-		_player_movement(delta)
-	move_and_slide()	
-		
-	if Input.is_action_just_pressed("throw_object"): 
-		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		ItemManager.activate_item(self, global_mouse_pos, "Ball")
 
-	move_and_slide()
+	if !_frozen and !_ragdolled:
+		if !_rooted:
+			if Input.is_action_just_pressed("throw_object"): 
+				var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+				ItemManager.activate_item(self, global_mouse_pos, "Ball")
+		if !_slowed:
+			if !_boosting:
+				_player_movement(delta)
+		if not is_on_floor():
+			if Input.is_action_just_pressed("jump"):
+				velocity.y = jump_impulse
 
+	if !_rooted:
+		move_and_slide()
 
 func _on_collide(body: Node3D) -> void:
 	if body is Ball and velocity != Vector3.ZERO:
