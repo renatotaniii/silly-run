@@ -20,6 +20,7 @@ enum ActionType {
 @export var item_name: String = "Unnamed Item"
 @export var max_speed: float = 20.0
 @export var max_range: float = 100.0
+@export var point_click: bool = false    # for shooting
 @export var shoot_speed: float = 50.0    # horizontal speed
 @export var throw_speed: float = 20.0    # horizontal speed
 @export var cast_time: float = 1.0       # multiplier
@@ -103,11 +104,12 @@ func use_throw(player_to_cursor: Vector3):
 func shoot_projectile(player_to_cursor: Vector3):
 	self.name = "Bang"
 	queued_action = ActionType.SHOOT
-
-	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
-	var xz_direction = xz_component.normalized()
 	
-	queued_direction = xz_direction
+	if self.point_click:
+		queued_direction = player_to_cursor.normalized()
+	else:
+		var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
+		queued_direction = xz_component.normalized()
 	
 	
 func place_item(global_cursor_pos: Vector3):
