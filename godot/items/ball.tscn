@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://cxheyyqptgx6c"]
 
-[ext_resource type="Script" uid="uid://c3gl8gxfs6drl" path="res://godot/items/ball.gd" id="1_dq3un"]
+[ext_resource type="Script" uid="uid://c3gl8gxfs6drl" path="res://godot/items/scripts/ball.gd" id="1_dq3un"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_2oo46"]
 friction = 0.4

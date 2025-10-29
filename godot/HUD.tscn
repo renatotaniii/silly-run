@@ -1,0 +1,118 @@
+[gd_scene load_steps=4 format=3 uid="uid://bm7y6wq7w3y22"]
+
+[ext_resource type="Script" uid="uid://p5mnij5fgqye" path="res://player_hud.gd" id="1_c3oyx"]
+[ext_resource type="Texture2D" uid="uid://baq364ypr7hnd" path="res://art/test_sprites.png" id="2_a6vsm"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lw5fd"]
+atlas = ExtResource("2_a6vsm")
+region = Rect2(0, 0, 50, 50)
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("1_c3oyx")
+inventory_dict = null
+
+[node name="BottomHUD" type="VBoxContainer" parent="Node"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -108.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="StatusEffects" type="HBoxContainer" parent="Node/BottomHUD"]
+layout_mode = 2
+
+[node name="ItemGrid" type="GridContainer" parent="Node/BottomHUD"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+columns = 3
+
+[node name="ItemSlot1" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_lw5fd")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot1"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot2" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot3" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot4" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot5" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot6" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

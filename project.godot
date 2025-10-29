@@ -17,7 +17,9 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-ItemManager="*res://godot/item_manager.gd"
+ItemManager="*res://godot/items/scripts/item_manager.gd"
+Hud="*res://godot/HUD.tscn"
+ItemConstants="*res://godot/items/scripts/item_constants.gd"
 
 [filesystem]
 
