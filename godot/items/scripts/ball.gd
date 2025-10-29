@@ -1,16 +1,27 @@
 class_name Ball
 extends BaseItem  
 
-var velocity = get_linear_velocity()
+
+# Set all property overrides here.
+func _init() -> void:
+	item_name = "Ball"
+	max_speed = 50.0
+	
+	# Define collision layer/mask here, or _ready (not sure yet)
+	# NOTE: Everything is on layer=1 by default. We have to manually set them 
+	# set_collision_layer_value(layer: int, value: bool)
+	# set_collision_mask_value(layer: int, value: bool)
+
+
+func _ready() -> void:
+	spawn_time = Time.get_ticks_msec() / 1000.0  # seconds
+	contact_monitor = true
+	max_contacts_reported = 1
+	connect("body_entered", Callable(self, "_on_body_entered"))
+
 
 func _physics_process(_delta: float):
-	max_speed = 50.0
-	# Drag to prevent infinite slid
-	"""
-	if velocity.length() > 0.01:  # only apply drag if significant
-		var drag_force = -velocity.normalized() * drag * mass
-		apply_central_force(drag_force)
-	"""
+	var velocity = get_linear_velocity()
 	
 	# Limit horizontal speed
 	if velocity.length() > max_speed:
