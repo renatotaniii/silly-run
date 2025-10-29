@@ -4,15 +4,9 @@ extends RigidBody3D
 Base class from which items are built upon on.
 For each item, create an associated script that extends this class.
 
-NOTE: In scripts that inherit this class (like ball.gd), you can
-              access the parent variables directly as if it were declared 
-              in your script, e.g, changing the weight without declaring it.
-
-Methods:
-- push(velocity: Vector3, strength_scalar: float = 1.0)
-- use_throw(item_node: BaseItem, origin: Marker3D, xz_direction: Vector3, xz_distance: float)
-- 
-
+In scripts that inherit this class (like ball.gd), you can access the parent 
+variables directly as if it were declared in your script. If they are to be
+overwritten, set them in _init().
 """
 enum ActionType { 
 	NONE, 
@@ -22,31 +16,26 @@ enum ActionType {
 	PLACE,
 }
 
-# Item references
-#@export var node_path: NodePath
-#@onready var item_node: RigidBody3D = get_node(node_path) # not sure if this is needed
-
-# Item properties
+@export_category("Item Properies")
 @export var item_name: String = "Unnamed Item"
 @export var max_speed: float = 20.0
 @export var max_range: float = 100.0
-
-@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
-@export var has_gravity: bool = true
-@export var air_drag_constant: float = 0.1
-@export var friction_constant: float = 0.1   
-
-@export var shoot_speed: float = 50.0
-@export var throw_speed: float = 20.0
+@export var point_click: bool = false    # for shooting
+@export var shoot_speed: float = 50.0    # horizontal speed
+@export var throw_speed: float = 20.0    # horizontal speed
 @export var cast_time: float = 1.0       # multiplier
 @export var despawn_timer: float = 20.0
 
+@export_category("World Properties")
+@export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
+@export var air_drag_constant: float = 0.1
+@export var friction_constant: float = 0.1   
+
 # Physics-related
-var ground: Plane = Plane(Vector3.UP, 0)   # change to height map at some point
+var ground: Plane = Plane(Vector3.UP, 0)         # NOTE: change to height map at some point
 var queued_action: ActionType = ActionType.NONE
 var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
-var max_check_distance: float = 100.0 
 
 # DEBUG STUFF
 var spawn_time = 0.0
@@ -58,22 +47,27 @@ func _ready() -> void:
 	max_contacts_reported = 1
 	connect("body_entered", Callable(self, "_on_body_entered"))
 
+
 func _on_body_entered(body: Node) -> void:
 	# TODO: Write logic for despawning items
 	var collision_time = Time.get_ticks_msec() / 1000.0
 	var lifetime = collision_time - spawn_time
 	print("Collided with: ", body.name)
 	print("Lifetime: ", lifetime, "seconds\n")
-
 	queue_free()  # delete node
-	
+
+
 # Real stuff
 func _integrate_forces(state: PhysicsDirectBodyState3D):
 	match queued_action:
 		ActionType.PUSH:
-			state.apply_impulse(queued_velocity)
+			state.apply_central_impulse(queued_velocity)
 		ActionType.THROW:
-			state.apply_impulse(queued_direction * throw_speed)
+			state.apply_central_impulse(queued_direction * throw_speed * self.mass)
+		ActionType.SHOOT:
+			state.apply_central_impulse(queued_direction * shoot_speed)
+		ActionType.PLACE:
+			pass
 		
 	# Reset
 	queued_action = ActionType.NONE
@@ -85,61 +79,41 @@ func push(velocity: Vector3, strength_scalar: float = 1.0):
 	queued_velocity = velocity * strength_scalar
 
 
-func get_theoretical_throw_distance(origin: Vector3):
-	var height = ground.distance_to(origin)
-	
-	# displacement = initial_v * time + 0.5 * (acceleration * time^2)
-	# time = sqrt(2 * acceleration * distance + initial_u^2) - initial_u / acceleration
-	var time_to_ground = (sqrt(2 * (gravity * gravity_scale) * height)) / (gravity * gravity_scale)   # u = 0
-	var theoretical_distance = throw_speed * time_to_ground
-	
-	# Debugging
-	print("Time: ", time_to_ground)
-	print("Theoretical distance: ", theoretical_distance)
-	
-	return theoretical_distance
-
-
-func calculate_throw_transformation(direction: Vector3, xz_distance: float, throw_origin: Vector3):
-	# TODO: WTF IS HAPPENING
-	var g = gravity * gravity_scale
-	var discriminant = 1 - g * (g * (xz_distance**2) + (2 * throw_origin.y * throw_speed)) / (throw_speed**4)
-	var angle = atan((throw_speed**2 / (g * xz_distance)) * (1 + sqrt(discriminant)))
-	var matrix_transform = Vector3(direction.x * cos(angle), throw_speed * sin(angle), direction.z * cos(angle))
-	
-	return matrix_transform.normalized()
-
-
-func use_throw(
-	player_to_cursor: Vector3, 
-	global_mouse_pos: Vector3
-	):
-	throw_speed = 20.0
-		
+# Calculates a throw direction using horizontal throw_speed and distance to the player
+func use_throw(player_to_cursor: Vector3):
 	self.name = "Yeet"
-	
-	# TODO: Fix either player_to_cursor or item_node.position. 
-	#       Currently the ball is undershooting. 
 	queued_action = ActionType.THROW
-	queued_direction = player_to_cursor.normalized()
-	
-	var dx = player_to_cursor.x
-	var dz = player_to_cursor.z
-	var xz_distance = Vector3(dx, 0, dz).length()
-	
-	var theoretical_distance = get_theoretical_throw_distance(self.position)
-	
-	# Choose throw angle above or below XZ-plane
-	if xz_distance < theoretical_distance:
-		print("-- Near --")
-		throw_speed = 25
-		queued_direction = (global_mouse_pos - self.global_position).normalized()
-	elif theoretical_distance <= xz_distance:
-		print("-- Far --")
-		xz_distance = min(xz_distance, max_range)
-		queued_direction = calculate_throw_transformation(queued_direction, xz_distance, self.global_position)
-	else:
-		print("Something is wrong...")
 
-func shoot_projectile(direction: Vector3):
-	pass
+	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
+	var xz_direction = xz_component.normalized()
+	var xz_distance = xz_component.length()
+	
+	xz_distance = min(xz_distance, max_range)
+	
+	# Closed form: theta = arctan(gravity * total_range / 2 * horizontal_u^2 - height / total_range)
+	var g = gravity * gravity_scale
+	var height = self.position.y
+	var first_term = (g * xz_distance) / (2 * (throw_speed**2))
+	var second_term = height / xz_distance
+	var angle = clamp(atan(first_term - second_term), -PI/2, PI/4)
+	
+	xz_direction.y = tan(angle)
+	queued_direction = xz_direction
+	
+	
+func shoot_projectile(player_to_cursor: Vector3):
+	self.name = "Bang"
+	queued_action = ActionType.SHOOT
+	
+	if self.point_click:
+		queued_direction = player_to_cursor.normalized()
+	else:
+		var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
+		queued_direction = xz_component.normalized()
+	
+	
+func place_item(global_cursor_pos: Vector3):
+	self.name = "Park"
+	queued_action = ActionType.PLACE
+	
+	self.global_position = global_cursor_pos
