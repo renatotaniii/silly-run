@@ -58,7 +58,7 @@ var _boosting = false
 # Status effect flags
 var _frozen = false
 var _ragdolled = false
-var _rooted = true
+var _rooted = false
 var _slowed = false
 
 func _init() -> void:
@@ -81,25 +81,54 @@ func _get_input_direction() -> Vector3:
 		return Vector3(input_vector.x, 0, input_vector.y)
 	return Vector3(0,0,0)
 
+enum status_effects {_ragdolled, _frozen, _rooted, _slowed}
+var current_status_effects = []
+
 func _physics_process(delta: float) -> void:	
+	if !_boosting:
+		if Input.is_action_just_pressed("dash"):
+			apply_instant_boost(60,0.4)
+		else:
+			_player_movement(delta)
+			
+	if current_status_effects.has(status_effects._ragdolled):
+		velocity = Vector3.ZERO
+		turn_rate = 0
+	if current_status_effects.has(status_effects._frozen):
+		velocity = Vector3.ZERO
+		turn_rate = 0
+	if current_status_effects.has(status_effects._rooted):
+		velocity = Vector3.ZERO
+	if current_status_effects.has(status_effects._slowed):
+		apply_speed_modifier(0.6,5)
+	else:
+		turn_rate = 2 * PI
+			
 	# Testing application of speed modifiers
 	if !speed_modifiers.is_empty():
 		apply_speed_modifier(speed_modifiers.pop_back(), 5.0)
+		
+	if Input.is_action_just_pressed("ragdoll"):
+		apply_ragdoll_effect(5.0)
+		
+	if Input.is_action_just_pressed("freeze"):
+		apply_frozen_effect(5.0)
+		
+	if Input.is_action_just_pressed("root"):
+		apply_root_effect(5.0)
 
-	if !_frozen and !_ragdolled:
-		if !_rooted:
-			if Input.is_action_just_pressed("throw_object"): 
-				var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-				ItemManager.activate_item(self, global_mouse_pos, "Ball")
-		if !_slowed:
-			if !_boosting:
-				_player_movement(delta)
-		if not is_on_floor():
-			if Input.is_action_just_pressed("jump"):
-				velocity.y = jump_impulse
-
-	if !_rooted:
-		move_and_slide()
+	if Input.is_action_just_pressed("throw_object"): 
+		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+		ItemManager.activate_item(self, global_mouse_pos, "Ball")
+		
+		
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		if Input.is_action_just_pressed("jump"):
+			velocity.y = jump_impulse
+			
+	move_and_slide()
 
 func _on_collide(body: Node3D) -> void:
 	if body is Ball and velocity != Vector3.ZERO:
@@ -177,3 +206,33 @@ func get_mouse_pos():
 	mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
 	
 	return mouse_pos
+
+func apply_ragdoll_effect(duration: float):
+	_ragdolled = true
+	current_status_effects.append(status_effects._ragdolled)
+	await get_tree().create_timer(duration).timeout
+	current_status_effects.pop_front()
+	_ragdolled = false
+	
+func apply_frozen_effect(duration: float):
+	_frozen = true
+	current_status_effects.append(status_effects._frozen)
+	await get_tree().create_timer(duration).timeout
+	current_status_effects.pop_front()
+	_frozen = false
+	
+func apply_root_effect(duration: float):
+	_rooted = true
+	current_status_effects.append(status_effects._rooted)
+	await get_tree().create_timer(duration).timeout
+	current_status_effects.pop_front()
+	_rooted = false
+	
+# Diminish player speed gradually and increase player speed after slowest point up to normal speed (?)
+func apply_slow_effect(duration: float, rate: float): 
+	# TODO: what the fuck
+	_slowed = true
+	await get_tree().create_timer(duration).timeout
+	_slowed = false
+	
+	
