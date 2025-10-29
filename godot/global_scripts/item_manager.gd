@@ -23,7 +23,7 @@ func activate_item(player: CharacterBody3D, global_mouse_position: Vector3, item
 	var player_to_cursor = global_mouse_position - player.global_position
 	get_tree().root.add_child(item)
 	item.global_position = player.get_node("Pivot/ThrowOrigin").global_position
-	item.use_throw(player_to_cursor, global_mouse_position)
+	item.use_throw(player_to_cursor)
 
 ## Helper function if you don't want to use the item spawn pad
 func give_player_item(player: CharacterBody3D, item_name: String):
