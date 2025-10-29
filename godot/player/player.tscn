@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://kw40dg8o2ro8"]
 
-[ext_resource type="PackedScene" uid="uid://b8p8hgdusibuv" path="res://godot/player.glb" id="1_4flbx"]
-[ext_resource type="Script" uid="uid://dli4lmmi4i0gv" path="res://godot/player.gd" id="1_onrkg"]
+[ext_resource type="Script" uid="uid://dli4lmmi4i0gv" path="res://godot/player/scripts/player.gd" id="1_wcg31"]
+[ext_resource type="PackedScene" uid="uid://b8p8hgdusibuv" path="res://assets/art/blender_guy.glb" id="2_7pdxx"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_8m7vd"]
 size = Vector3(1.9884644, 1, 1.5090485)
@@ -10,11 +10,11 @@ size = Vector3(1.9884644, 1, 1.5090485)
 radius = 0.8
 
 [node name="Player" type="CharacterBody3D"]
-script = ExtResource("1_onrkg")
+script = ExtResource("1_wcg31")
 
 [node name="Pivot" type="Node3D" parent="."]
 
-[node name="Character" parent="Pivot" instance=ExtResource("1_4flbx")]
+[node name="Character" parent="Pivot" instance=ExtResource("2_7pdxx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44492358, 0)
 
 [node name="PushArea" type="Area3D" parent="Pivot"]
