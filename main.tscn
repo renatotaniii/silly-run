@@ -1,0 +1,44 @@
+[gd_scene load_steps=8 format=3 uid="uid://bi6jj8iumtclw"]
+
+[ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://godot/player/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://cou5xg6ygqog3" path="res://godot/world/props/pickup.tscn" id="2_0xm2m"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7dm0k"]
+size = Vector3(50, 0.1, 50)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_ig7tw"]
+noise_type = 4
+seed = 7
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_0xm2m"]
+noise = SubResource("FastNoiseLite_ig7tw")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2yge"]
+albedo_color = Color(0.6117647, 1, 0.44313726, 1)
+albedo_texture = SubResource("NoiseTexture2D_0xm2m")
+
+[sub_resource type="BoxMesh" id="BoxMesh_1bvp3"]
+material = SubResource("StandardMaterial3D_h2yge")
+size = Vector3(50, 0.1, 50)
+
+[node name="Main" type="Node"]
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+shape = SubResource("BoxShape3D_7dm0k")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+mesh = SubResource("BoxMesh_1bvp3")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.43365905, 0.90107703, 0, -0.90107703, 0.43365905, 0, 0, 0)
+light_color = Color(0.89492244, 0.89492244, 0.8949224, 1)
+shadow_enabled = true
+
+[node name="Player" parent="." instance=ExtResource("1_ig7tw")]
+
+[node name="Pickup" parent="." instance=ExtResource("2_0xm2m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.9, 12)

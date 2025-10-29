@@ -37,13 +37,7 @@ enum CameraModes {
 ## Default is 1.0 (1 second to full stop)
 @export var time_to_zero_speed := 1.0
 
-
-@export_category("Misc")
-
-# Ball reference (Set ball node path in the inspector)
-@export var ball_node_path: NodePath
-@onready var ball: RigidBody3D = get_node(ball_node_path)
-
+var inventory: Inventory = Inventory.new()
 
 # Player state
 var speed_modifiers: Array[float] = [0.5]
@@ -51,6 +45,7 @@ var turn_rate_modifiers: Array[float] = []
 var speed_ratio = 0.0
 var input_direction = Vector3.ZERO
 var movement_direction = Vector2.ZERO
+
 
 # Tentative variable name
 var _boosting = false
@@ -73,6 +68,8 @@ func _ready() -> void:
 	elif camera_mode == CameraModes.DEBUG:
 		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
 	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
+	
+	Hud.get_node("Node").connect_player_inventory(inventory)
 	
 # Returns a direction for use with e.g. speed
 func _get_input_direction() -> Vector3:
@@ -128,6 +125,11 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = jump_impulse
 			
+	#if Input.is_action_just_pressed("throw_object"): 
+		#var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+		#ItemManager.activate_item(self, global_mouse_pos, "BALL")
+	_on_item_input()
+
 	move_and_slide()
 
 func _on_collide(body: Node3D) -> void:
@@ -174,6 +176,22 @@ func _input(event):
 				var mouse_dir = $CameraPivot.basis.y * wheel_input
 				$CameraPivot/Camera3D.global_position -= mouse_dir
 
+func _on_item_input():
+	var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+	if Input.is_action_just_pressed("slot_1"):
+		inventory.use_item(self, global_mouse_pos, 1)
+	if Input.is_action_just_pressed("slot_2"):
+		inventory.use_item(self, global_mouse_pos, 2)
+	if Input.is_action_just_pressed("slot_3"):
+		inventory.use_item(self, global_mouse_pos, 3)
+	if Input.is_action_just_pressed("slot_4"):
+		inventory.use_item(self, global_mouse_pos, 4)
+	if Input.is_action_just_pressed("slot_5"):
+		inventory.use_item(self, global_mouse_pos, 5)
+	if Input.is_action_just_pressed("slot_6"):
+		inventory.use_item(self, global_mouse_pos, 6)
+		
+
 ## Applies [modifier] (speed multiplier) to [member max_speed] of player for [duration] seconds.
 ## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Speed is reduced to 20% for 5 seconds
 func apply_speed_modifier(modifier: float, duration: float):
@@ -185,6 +203,7 @@ func apply_speed_modifier(modifier: float, duration: float):
 func apply_turn_rate_modifier(modifier: float, duration: float):
 	turn_rate = turn_rate * modifier
 	get_tree().create_timer(duration).timeout.connect(func(): turn_rate = turn_rate / modifier)
+
 
 ## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
 ## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
@@ -199,11 +218,11 @@ func apply_instant_boost(boost: float, duration: float):
 func get_mouse_pos():
 	# TODO: Use a height map? When clicking on an elevation, parallax is
 	#       not being taken into account.
-	var plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+	var ground_plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
 	var mouse_pos = get_viewport().get_mouse_position()
 	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
 	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
-	mouse_pos = plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
 	
 	return mouse_pos
 
@@ -235,4 +254,7 @@ func apply_slow_effect(duration: float, rate: float):
 	await get_tree().create_timer(duration).timeout
 	_slowed = false
 	
+	
+func pickup_item(item_name: String):
+	inventory.add_item(item_name)
 	

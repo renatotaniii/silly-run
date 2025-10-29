@@ -1,0 +1,164 @@
+[gd_scene load_steps=14 format=3 uid="uid://bm7y6wq7w3y22"]
+
+[ext_resource type="Script" uid="uid://p5mnij5fgqye" path="res://godot/global_scripts/player_hud.gd" id="1_c3oyx"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_c3oyx"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lw5fd"]
+atlas = SubResource("CompressedTexture2D_c3oyx")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_a6vsm"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kmvnd"]
+atlas = SubResource("CompressedTexture2D_a6vsm")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_lw5fd"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l6xrx"]
+atlas = SubResource("CompressedTexture2D_lw5fd")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_12ifq"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_71yh8"]
+atlas = SubResource("CompressedTexture2D_12ifq")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_m76nv"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_orthh"]
+atlas = SubResource("CompressedTexture2D_m76nv")
+region = Rect2(0, 0, 50, 50)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_vugox"]
+load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ilxvx"]
+atlas = SubResource("CompressedTexture2D_vugox")
+region = Rect2(0, 0, 50, 50)
+
+[node name="CanvasLayer" type="CanvasLayer"]
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("1_c3oyx")
+
+[node name="BottomHUD" type="VBoxContainer" parent="Node"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -108.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="StatusEffects" type="HBoxContainer" parent="Node/BottomHUD"]
+layout_mode = 2
+
+[node name="ItemGrid" type="GridContainer" parent="Node/BottomHUD"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+columns = 3
+
+[node name="ItemSlot1" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_lw5fd")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot1"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot2" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_kmvnd")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot2"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot3" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_l6xrx")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot3"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot4" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_71yh8")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot4"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot5" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_orthh")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot5"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ItemSlot6" type="TextureButton" parent="Node/BottomHUD/ItemGrid"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 6
+texture_normal = SubResource("AtlasTexture_ilxvx")
+
+[node name="Panel" type="Panel" parent="Node/BottomHUD/ItemGrid/ItemSlot6"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
