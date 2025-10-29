@@ -38,13 +38,6 @@ enum CameraModes {
 @export var time_to_zero_speed := 1.0
 
 
-@export_category("Misc")
-
-# Ball reference (Set ball node path in the inspector)
-@export var ball_node_path: NodePath
-@onready var ball: RigidBody3D = get_node(ball_node_path)
-
-
 # Player state
 var speed_modifiers: Array[float] = [0.5]
 var turn_rate_modifiers: Array[float] = []

@@ -15,4 +15,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7311687, -2)
 
 [node name="TestWorld" parent="." instance=ExtResource("3_wop1k")]
 
-[node name="Player" parent="TestWorld" instance=ExtResource("4_2jwmw")]
+[node name="Player" parent="." instance=ExtResource("4_2jwmw")]
