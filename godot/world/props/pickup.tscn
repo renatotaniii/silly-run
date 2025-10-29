@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://cou5xg6ygqog3"]
 
-[ext_resource type="Script" uid="uid://c308yl6w88vto" path="res://pickup.gd" id="1_iqk3k"]
+[ext_resource type="Script" uid="uid://c308yl6w88vto" path="res://godot/world/props/scripts/pickup.gd" id="1_4jmiu"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_pu7wf"]
 height = 0.1
@@ -25,7 +25,7 @@ radius = 1.0
 
 [node name="Pickup" type="StaticBody3D"]
 collision_mask = 2
-script = ExtResource("1_iqk3k")
+script = ExtResource("1_4jmiu")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CylinderShape3D_pu7wf")

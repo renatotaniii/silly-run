@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://bi6jj8iumtclw"]
 
-[ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://art/player.tscn" id="1_ig7tw"]
-[ext_resource type="PackedScene" uid="uid://cou5xg6ygqog3" path="res://pickup.tscn" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://kw40dg8o2ro8" path="res://godot/player/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://cou5xg6ygqog3" path="res://godot/world/props/pickup.tscn" id="2_0xm2m"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7dm0k"]
 size = Vector3(50, 0.1, 50)

@@ -1,6 +1,7 @@
-[gd_scene load_steps=18 format=3 uid="uid://bkmywgj1b4vqk"]
+[gd_scene load_steps=19 format=3 uid="uid://bkmywgj1b4vqk"]
 
 [ext_resource type="PackedScene" uid="uid://b74jwldku566k" path="res://assets/the_simpliest_blender_game_flight_simulator.glb" id="1_ek3xg"]
+[ext_resource type="PackedScene" uid="uid://cou5xg6ygqog3" path="res://godot/world/props/pickup.tscn" id="2_md7hs"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fk20e"]
 size = Vector3(100, 2, 100)
@@ -115,10 +116,6 @@ skeleton = NodePath("../CollisionShape3D")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Walls/WallPositiveX"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 2, 0)
 shape = SubResource("BoxShape3D_wop1k")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.9659259, 0.06698729, -0.25, 0.25, -0.49148145, 0.83423376, -0.06698731, -0.86830795, -0.49148145, -55, 43, -66)
-shadow_enabled = true
 
 [node name="RampWithElevation" type="Node3D" parent="."]
 
@@ -265,3 +262,10 @@ transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 0, 0, 0)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="OhGodTheresAnotherOne/StaticBody3D"]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 shape = SubResource("CylinderShape3D_sscoq")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.9659259, 0.066987276, -0.25, 0.25, -0.49148145, 0.83423376, -0.06698731, -0.86830795, -0.49148145, -55, 43, -66)
+shadow_enabled = true
+
+[node name="Pickup" parent="." instance=ExtResource("2_md7hs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -16)
