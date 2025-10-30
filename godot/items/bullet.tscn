@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://c4m4osax4jq0f"]
 
-[ext_resource type="Script" uid="uid://b0ijfcr4f5wi1" path="res://godot/items/bullet.gd" id="1_8dqn4"]
+[ext_resource type="Script" uid="uid://b0ijfcr4f5wi1" path="res://godot/items/scripts/bullet.gd" id="1_8dqn4"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_2oo46"]
 friction = 0.4
