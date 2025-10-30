@@ -56,6 +56,10 @@ var _ragdolled = false
 var _rooted = false
 var _slowed = false
 
+var current_status_effects = []
+
+signal status_changed
+
 func _init() -> void:
 	pass
 
@@ -70,6 +74,7 @@ func _ready() -> void:
 	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 	
 	Hud.get_node("Node").connect_player_inventory(inventory)
+	Hud.get_node("Node").connect_player_status(status_changed)
 	
 # Returns a direction for use with e.g. speed
 func _get_input_direction() -> Vector3:
@@ -78,9 +83,6 @@ func _get_input_direction() -> Vector3:
 		return Vector3(input_vector.x, 0, input_vector.y)
 	return Vector3(0,0,0)
 
-enum status_effects {_ragdolled, _frozen, _rooted, _slowed}
-var current_status_effects = []
-
 func _physics_process(delta: float) -> void:	
 	if !_boosting:
 		if Input.is_action_just_pressed("dash"):
@@ -88,15 +90,15 @@ func _physics_process(delta: float) -> void:
 		else:
 			_player_movement(delta)
 			
-	if current_status_effects.has(status_effects._ragdolled):
+	if current_status_effects.has("RAGDOLLED"):
 		velocity = Vector3.ZERO
 		turn_rate = 0
-	if current_status_effects.has(status_effects._frozen):
+	if current_status_effects.has("FROZEN"):
 		velocity = Vector3.ZERO
 		turn_rate = 0
-	if current_status_effects.has(status_effects._rooted):
+	if current_status_effects.has("ROOTED"):
 		velocity = Vector3.ZERO
-	if current_status_effects.has(status_effects._slowed):
+	if current_status_effects.has("SLOWED"):
 		apply_speed_modifier(0.6,5)
 	else:
 		turn_rate = 2 * PI
@@ -228,33 +230,41 @@ func get_mouse_pos():
 
 func apply_ragdoll_effect(duration: float):
 	_ragdolled = true
-	current_status_effects.append(status_effects._ragdolled)
+	current_status_effects.append("RAGDOLLED")
+	emit_signal("status_changed", current_status_effects)
 	await get_tree().create_timer(duration).timeout
 	current_status_effects.pop_front()
+	emit_signal("status_changed", current_status_effects)
 	_ragdolled = false
 	
 func apply_frozen_effect(duration: float):
 	_frozen = true
-	current_status_effects.append(status_effects._frozen)
+	current_status_effects.append("FROZEN")
+	emit_signal("status_changed", current_status_effects)
 	await get_tree().create_timer(duration).timeout
 	current_status_effects.pop_front()
+	emit_signal("status_changed", current_status_effects)
 	_frozen = false
 	
 func apply_root_effect(duration: float):
 	_rooted = true
-	current_status_effects.append(status_effects._rooted)
+	current_status_effects.append("ROOTED")
+	emit_signal("status_changed", current_status_effects)
 	await get_tree().create_timer(duration).timeout
 	current_status_effects.pop_front()
+	emit_signal("status_changed", current_status_effects)
 	_rooted = false
 	
 # Diminish player speed gradually and increase player speed after slowest point up to normal speed (?)
 func apply_slow_effect(duration: float, rate: float): 
 	# TODO: what the fuck
 	_slowed = true
+	current_status_effects.append("SLOWED")
+	emit_signal("status_changed", current_status_effects)
 	await get_tree().create_timer(duration).timeout
+	current_status_effects.pop_front()
+	emit_signal("status_changed", current_status_effects)
 	_slowed = false
-	
 	
 func pickup_item(item_name: String):
 	inventory.add_item(item_name)
-	

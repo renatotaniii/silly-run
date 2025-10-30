@@ -1,6 +1,7 @@
-[gd_scene load_steps=14 format=3 uid="uid://bm7y6wq7w3y22"]
+[gd_scene load_steps=15 format=3 uid="uid://bm7y6wq7w3y22"]
 
 [ext_resource type="Script" uid="uid://p5mnij5fgqye" path="res://godot/global_scripts/player_hud.gd" id="1_c3oyx"]
+[ext_resource type="PackedScene" uid="uid://dt3rv36rxh828" path="res://godot/player/status_indicator.tscn" id="2_a6vsm"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_c3oyx"]
 load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
@@ -59,6 +60,12 @@ grow_horizontal = 2
 grow_vertical = 0
 
 [node name="StatusEffects" type="HBoxContainer" parent="Node/BottomHUD"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="StatusIndicator" parent="Node/BottomHUD/StatusEffects" instance=ExtResource("2_a6vsm")]
 layout_mode = 2
 
 [node name="ItemGrid" type="GridContainer" parent="Node/BottomHUD"]

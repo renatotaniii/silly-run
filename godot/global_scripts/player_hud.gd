@@ -9,6 +9,8 @@ extends Node
 	6: $BottomHUD/ItemGrid/ItemSlot6,
 	}
 
+var status_indicator = preload("res://godot/player/status_indicator.tscn")
+
 var current_inventory: Inventory = null
 
 func _ready():
@@ -22,10 +24,22 @@ func connect_player_inventory(inventory: Inventory):
 	current_inventory.changed.connect(update_hud)	
 	update_hud()
 
+func connect_player_status(status_signal: Signal):
+	status_signal.connect(update_status_effects)
+
 func update_hud():
 	for slot in current_inventory.inventory:
 		if current_inventory.inventory[slot] != null:
 			player_inventory_slots[slot].texture_normal.region.position = ItemManager.ITEM_SPRITE_POSITION[current_inventory.inventory[slot]]
 		else:
 			player_inventory_slots[slot].texture_normal.region.position = Vector2(150, 0)
+			
+func update_status_effects(player_status: Array):
+	var children = $BottomHUD/StatusEffects.get_children()
+	for child in children:
+		child.queue_free()
+	for status in player_status:
+		var status_indicator = status_indicator.instantiate()
+		status_indicator.get_node("Panel/Label").text = "%s" %status
+		$BottomHUD/StatusEffects.add_child(status_indicator)
 			
