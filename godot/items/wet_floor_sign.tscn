@@ -1,0 +1,40 @@
+[gd_scene load_steps=6 format=3 uid="uid://car5y74pj27s4"]
+
+[ext_resource type="PackedScene" uid="uid://ck8lx20pebij1" path="res://assets/wet_floor_sign/wet_floor_sign.glb" id="1_7kjm6"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_pq5ab"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_qvowt"]
+size = Vector3(0.7, 1.3156983, 0.7)
+
+[sub_resource type="PrismMesh" id="PrismMesh_fmoku"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_qvowt"]
+height = 0.1
+radius = 2.5
+
+[node name="WetFloorSign" type="RigidBody3D"]
+physics_material_override = SubResource("PhysicsMaterial_pq5ab")
+
+[node name="FAB converted" parent="." instance=ExtResource("1_7kjm6")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0001904741, 0.6078491, -0.024999939)
+shape = SubResource("BoxShape3D_qvowt")
+debug_color = Color(0.6897752, 0.4912516, 0.2417711, 0.41960785)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(-3.2381394e-08, 0, -0.63708794, 0, 1.344, 0, 0.74079996, 0, -2.7847998e-08, 0, 0.6, 0)
+visible = false
+visibility_parent = NodePath(".")
+mesh = SubResource("PrismMesh_fmoku")
+skeleton = NodePath("../CollisionShape3D")
+
+[node name="Area3D" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.014798179, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.046292856, 0)
+shape = SubResource("CylinderShape3D_qvowt")
+debug_color = Color(0.07450981, 0.6117647, 0.73333335, 0.41960785)

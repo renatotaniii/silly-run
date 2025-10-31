@@ -4,7 +4,7 @@ extends BaseItem
 
 # Set all property overrides here.
 func _init() -> void:
-	item_name = "Banana"
+	item_name = "WET_FLOOR_SIGN"
 
 
 func _ready() -> void:
