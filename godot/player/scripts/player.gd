@@ -1,3 +1,4 @@
+class_name Player
 extends CharacterBody3D
 
 enum CameraModes {
@@ -5,6 +6,12 @@ enum CameraModes {
 	TOP_DOWN,
 	## Debug Camera
 	DEBUG,
+}
+
+enum Status {
+	MOVE_SPEED,
+	TURN_RATE,
+	INPUT
 }
 
 # Configurables
@@ -20,7 +27,7 @@ enum CameraModes {
 @export_category("Speed Modifiers")
 ## Max speed dictates the player's [member Speed] after fully accelerating. [br]
 ## Default max speed is 1.0 [i](100% movement speed)[/i]
-@export var max_speed := 1.0
+@export var max_speed: float = 1.0
 
 ## Player's movement speed
 @export var speed := 20.0
@@ -38,10 +45,13 @@ enum CameraModes {
 @export var time_to_zero_speed := 1.0
 
 var inventory: Inventory = Inventory.new()
+var status_effects: StatusEffects = StatusEffects.new()
+
+# Default values to easily reset player status
+var _default_max_speed = max_speed
+var _default_turn_rate = turn_rate
 
 # Player state
-var speed_modifiers: Array[float] = [0.5]
-var turn_rate_modifiers: Array[float] = []
 var speed_ratio = 0.0
 var input_direction = Vector3.ZERO
 var movement_direction = Vector2.ZERO
@@ -50,15 +60,7 @@ var movement_direction = Vector2.ZERO
 # Tentative variable name
 var _boosting = false
 
-# Status effect flags
-var _frozen = false
-var _ragdolled = false
-var _rooted = false
-var _slowed = false
-
-var current_status_effects = []
-
-signal status_changed
+signal update_status_display(current_status_effects: Array)
 
 func _init() -> void:
 	pass
@@ -74,14 +76,14 @@ func _ready() -> void:
 	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
 	
 	Hud.get_node("Node").connect_player_inventory(inventory)
-	Hud.get_node("Node").connect_player_status(status_changed)
+	Hud.get_node("Node").connect_player_status(update_status_display)
+	
+	status_effects.status_updated.connect(apply_status_effects)
 	
 # Returns a direction for use with e.g. speed
 func _get_input_direction() -> Vector3:
-	if !_frozen and !_ragdolled:
-		var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-		return Vector3(input_vector.x, 0, input_vector.y)
-	return Vector3(0,0,0)
+	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	return Vector3(input_vector.x, 0, input_vector.y)
 
 func _physics_process(delta: float) -> void:	
 	if !_boosting:
@@ -89,36 +91,12 @@ func _physics_process(delta: float) -> void:
 			apply_instant_boost(60,0.4)
 		else:
 			_player_movement(delta)
-			
-	if current_status_effects.has("RAGDOLLED"):
-		velocity = Vector3.ZERO
-		turn_rate = 0
-	if current_status_effects.has("FROZEN"):
-		velocity = Vector3.ZERO
-		turn_rate = 0
-	if current_status_effects.has("ROOTED"):
-		velocity = Vector3.ZERO
-	if current_status_effects.has("SLOWED"):
-		apply_speed_modifier(0.6,5)
-	else:
-		turn_rate = 2 * PI
-			
-	# Testing application of speed modifiers
-	if !speed_modifiers.is_empty():
-		apply_speed_modifier(speed_modifiers.pop_back(), 5.0)
-		
-	if Input.is_action_just_pressed("ragdoll"):
-		apply_ragdoll_effect(5.0)
-		
-	if Input.is_action_just_pressed("freeze"):
-		apply_frozen_effect(5.0)
-		
-	if Input.is_action_just_pressed("root"):
-		apply_root_effect(5.0)
+
+	_on_test_status_input()
 
 	if Input.is_action_just_pressed("throw_object"): 
 		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		ItemManager.activate_item(self, global_mouse_pos, "Ball")
+		ItemManager.activate_item(self, global_mouse_pos, "BALL")
 		
 		
 	if not is_on_floor():
@@ -149,7 +127,6 @@ func _player_movement(delta):
 		_player_orientation(input_direction, delta)
 	else:
 		speed_ratio = max(speed_ratio - time_to_zero_speed * delta, 0.0)
-	
 	movement_direction = ($Pivot.basis * Vector3(0, 0, -1)) * speed * speed_ratio
 	velocity.x = movement_direction.x
 	velocity.z = movement_direction.z 
@@ -192,20 +169,6 @@ func _on_item_input():
 		inventory.use_item(self, global_mouse_pos, 5)
 	if Input.is_action_just_pressed("slot_6"):
 		inventory.use_item(self, global_mouse_pos, 6)
-		
-
-## Applies [modifier] (speed multiplier) to [member max_speed] of player for [duration] seconds.
-## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Speed is reduced to 20% for 5 seconds
-func apply_speed_modifier(modifier: float, duration: float):
-	max_speed = max_speed * modifier
-	get_tree().create_timer(duration).timeout.connect(func(): max_speed = max_speed / modifier)
-
-## Applies [modifier] (speed multiplier) to [member turn_rate] of player for [duration] seconds.
-## [br]E.g. Modifer: [param 0.2] Duration: [param 5.0] -> Turn Rate is reduced to 20% for 5 seconds	
-func apply_turn_rate_modifier(modifier: float, duration: float):
-	turn_rate = turn_rate * modifier
-	get_tree().create_timer(duration).timeout.connect(func(): turn_rate = turn_rate / modifier)
-
 
 ## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
 ## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
@@ -219,52 +182,91 @@ func apply_instant_boost(boost: float, duration: float):
 
 func get_mouse_pos():
 	# TODO: Use a height map? When clicking on an elevation, parallax is
-	#       not being taken into account.
-	var ground_plane = Plane(Vector3.UP, 0)  # XZ-plane at Y=0
+	#		not being taken into account.
+	var ground_plane = Plane(Vector3.UP, 0)	# XZ-plane at Y=0
 	var mouse_pos = get_viewport().get_mouse_position()
-	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)     # point
-	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)  # ray
-	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)          # point
+	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)	# point
+	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)	# ray
+	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)	# point
 	
 	return mouse_pos
 
-func apply_ragdoll_effect(duration: float):
-	_ragdolled = true
-	current_status_effects.append("RAGDOLLED")
-	emit_signal("status_changed", current_status_effects)
-	await get_tree().create_timer(duration).timeout
-	current_status_effects.pop_front()
-	emit_signal("status_changed", current_status_effects)
-	_ragdolled = false
+# Applies any effect for a given duration
+# Parameter details:
+#
+#	effect_name: String -> This can be any name, it's just what is going to be displayed in the HUD
+#	affected_stats: Dictionary[Status, Array[float, float]]:
+#
+#	I can't do deeply nested typing here so here is more details:
+#		The Dictionary you will pass is going to include the following information:
+#			Status(Key): This is the Status enum (speed/turnrate/input) it's defined in line 11
+#			Data(Value): This is the modifier and duration in a size 2 array.
+#				Index 0 corresponds to modifier
+#				Index 1 coresponds to duration
 	
-func apply_frozen_effect(duration: float):
-	_frozen = true
-	current_status_effects.append("FROZEN")
-	emit_signal("status_changed", current_status_effects)
-	await get_tree().create_timer(duration).timeout
-	current_status_effects.pop_front()
-	emit_signal("status_changed", current_status_effects)
-	_frozen = false
+'''
+	Example:
+		
+	apply_status_effect("EffectName", {
+		Player.Status.MOVE_SPEED: [0.5, 3.0]
+	})
 	
-func apply_root_effect(duration: float):
-	_rooted = true
-	current_status_effects.append("ROOTED")
-	emit_signal("status_changed", current_status_effects)
-	await get_tree().create_timer(duration).timeout
-	current_status_effects.pop_front()
-	emit_signal("status_changed", current_status_effects)
-	_rooted = false
+	This function call with apply a movement speed debuff, slowing the player by 50% for 3 seconds.
 	
-# Diminish player speed gradually and increase player speed after slowest point up to normal speed (?)
-func apply_slow_effect(duration: float, rate: float): 
-	# TODO: what the fuck
-	_slowed = true
-	current_status_effects.append("SLOWED")
-	emit_signal("status_changed", current_status_effects)
-	await get_tree().create_timer(duration).timeout
-	current_status_effects.pop_front()
-	emit_signal("status_changed", current_status_effects)
-	_slowed = false
-	
+	Note: When applying a status which affects INPUT, you can leave the first index empty
+	E.g. {
+		Player.Status.MOVE_SPEED: [0.5, 3.0]
+		Player.Status.INPUT: [3.0]
+	}
+	but I recommend to just keep it consistent with the rest of the status modifications 
+'''
+func apply_status_effect(effect_name: String, affected_stats: Dictionary[Status, Array]):
+	# Will change this depending on kevin's code
+	for stat in affected_stats.keys():	
+		var modifier = affected_stats.get(stat)[0]
+		var duration = affected_stats.get(stat)[-1]
+		match stat:
+			Status.MOVE_SPEED:
+				status_effects.add_speed_modifier(modifier)
+				get_tree().create_timer(duration).timeout.connect(func(): status_effects.remove_speed_modifier(modifier))
+			Status.TURN_RATE:
+				status_effects.add_turn_rate_modifier(modifier)
+				get_tree().create_timer(duration).timeout.connect(func(): status_effects.remove_turn_rate_modifier(modifier))
+			Status.INPUT:
+				set_deferred("process_mode", Node.PROCESS_MODE_DISABLED)
+				get_tree().create_timer(duration).timeout.connect(func(): set_deferred("process_mode", Node.PROCESS_MODE_ALWAYS))
+			_:
+				print("you got hit by nothing...")
+				break
+	status_effects.add_status_effect(effect_name)
+	var max_duration = affected_stats.values().map(func(arr): return arr[-1]).max()
+	get_tree().create_timer(max_duration).timeout.connect(func(): status_effects.remove_status_effect(effect_name))
+
+func apply_status_effects():
+	update_status_display.emit(status_effects.current_status_effects)
+	max_speed = _default_max_speed * status_effects.get_speed_modifier()
+	turn_rate = _default_turn_rate * status_effects.get_turn_rate_modifier()
+
 func pickup_item(item_name: String):
 	inventory.add_item(item_name)
+	
+func _on_test_status_input():
+	if Input.is_action_just_pressed("status_slow"):
+		apply_status_effect("Test (Slow)", {
+			Status.MOVE_SPEED: [0.3, 5.0],
+			Status.TURN_RATE: [0.5, 5.0]
+		})
+	if Input.is_action_just_pressed("status_freeze"):
+		apply_status_effect("Test (Freeze)", {
+			Status.MOVE_SPEED: [0.5, 7.0],
+			Status.TURN_RATE: [0.7, 5.0],
+			Status.INPUT: [0, 3.0]
+		})
+	if Input.is_action_just_pressed("status_ragdoll"):
+		apply_status_effect("Test (Ragdoll)", {
+			Status.INPUT: [3.0]
+		})
+	if Input.is_action_just_pressed("status_root"):
+		apply_status_effect("Test (Root)", {
+			Status.MOVE_SPEED: [0, 5.0]
+		})

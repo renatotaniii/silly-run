@@ -1,7 +1,7 @@
 [gd_scene load_steps=15 format=3 uid="uid://bm7y6wq7w3y22"]
 
-[ext_resource type="Script" uid="uid://p5mnij5fgqye" path="res://godot/global_scripts/player_hud.gd" id="1_c3oyx"]
-[ext_resource type="PackedScene" uid="uid://dt3rv36rxh828" path="res://godot/player/status_indicator.tscn" id="2_a6vsm"]
+[ext_resource type="Script" uid="uid://p5mnij5fgqye" path="res://godot/global_scripts/player_hud.gd" id="1_6sy4e"]
+[ext_resource type="PackedScene" uid="uid://dt3rv36rxh828" path="res://godot/ui/hud/status_indicator.tscn" id="2_1m2fc"]
 
 [sub_resource type="CompressedTexture2D" id="CompressedTexture2D_c3oyx"]
 load_path = "res://.godot/imported/test_sprites.png-ba09507021eedda9cf678de3a9d5175f.ctex"
@@ -46,11 +46,19 @@ atlas = SubResource("CompressedTexture2D_vugox")
 region = Rect2(0, 0, 50, 50)
 
 [node name="CanvasLayer" type="CanvasLayer"]
+layer = 0
 
-[node name="Node" type="Node" parent="."]
-script = ExtResource("1_c3oyx")
+[node name="Node" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_6sy4e")
 
 [node name="BottomHUD" type="VBoxContainer" parent="Node"]
+layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -65,7 +73,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="StatusIndicator" parent="Node/BottomHUD/StatusEffects" instance=ExtResource("2_a6vsm")]
+[node name="StatusIndicator" parent="Node/BottomHUD/StatusEffects" instance=ExtResource("2_1m2fc")]
 layout_mode = 2
 
 [node name="ItemGrid" type="GridContainer" parent="Node/BottomHUD"]
@@ -169,3 +177,9 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="DebugPanel" type="HBoxContainer" parent="Node"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
