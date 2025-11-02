@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cklfjlycojf6c"]
 
-[ext_resource type="Script" uid="uid://tw5xqvajnw2c" path="res://godot/menus/stage_button.gd" id="1_rsd7n"]
+[ext_resource type="Script" uid="uid://tw5xqvajnw2c" path="res://godot/ui/menus/stage_button.gd" id="1_rsd7n"]
 [ext_resource type="Texture2D" uid="uid://cs2jdyx4g2b50" path="res://assets/art/test_stage_image.png" id="1_udbau"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rsd7n"]

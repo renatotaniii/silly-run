@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://cykjmbwtbjev2"]
 
-[ext_resource type="PackedScene" uid="uid://cklfjlycojf6c" path="res://godot/menus/stage_button.tscn" id="1_8gaed"]
-[ext_resource type="Script" uid="uid://bw7yd8i3f2y5o" path="res://godot/menus/main_menu.gd" id="1_jg7my"]
+[ext_resource type="PackedScene" uid="uid://cklfjlycojf6c" path="res://godot/ui/menus/stage_button.tscn" id="1_8gaed"]
+[ext_resource type="Script" uid="uid://bw7yd8i3f2y5o" path="res://godot/ui/menus/main_menu.gd" id="1_jg7my"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2gi86"]
 content_margin_left = 0.0
@@ -23,7 +23,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_jg7my")
-debug_mode = false
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
