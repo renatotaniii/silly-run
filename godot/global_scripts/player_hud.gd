@@ -1,4 +1,4 @@
-extends Node
+extends Control
 
 @onready var player_inventory_slots = {
 	1: $BottomHUD/ItemGrid/ItemSlot1,
@@ -10,11 +10,7 @@ extends Node
 	}
 
 var status_indicator = preload("res://godot/player/status_indicator.tscn")
-
 var current_inventory: Inventory = null
-
-func _ready():
-	pass
 
 func connect_player_inventory(inventory: Inventory):
 	# Disconnect old inventory if exists
@@ -39,7 +35,6 @@ func update_status_effects(player_status: Array):
 	for child in children:
 		child.queue_free()
 	for status in player_status:
-		var status_indicator = status_indicator.instantiate()
-		status_indicator.get_node("Panel/Label").text = "%s" %status
-		$BottomHUD/StatusEffects.add_child(status_indicator)
-			
+		var new_status_indicator = status_indicator.instantiate()
+		new_status_indicator.get_node("Panel/Label").text = "%s" %status
+		$BottomHUD/StatusEffects.add_child(new_status_indicator)

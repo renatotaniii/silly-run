@@ -118,7 +118,7 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("throw_object"): 
 		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		ItemManager.activate_item(self, global_mouse_pos, "Ball")
+		ItemManager.activate_item(self, global_mouse_pos, "BALL")
 		
 		
 	if not is_on_floor():
