@@ -18,7 +18,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 ItemManager="*res://godot/global_scripts/item_manager.gd"
-Hud="*res://godot/HUD.tscn"
+Hud="*res://godot/hud.tscn"
+SceneManager="*res://godot/global_scripts/scene_manager.gd"
 
 [filesystem]
 
