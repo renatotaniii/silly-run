@@ -15,6 +15,7 @@ enum Status {
 }
 
 # Configurables
+@export var player_id: int = 1
 @export var jump_impulse = 5.0
 @export var gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
 
@@ -62,62 +63,34 @@ var _boosting = false
 
 signal update_status_display(current_status_effects: Array)
 
-func _init() -> void:
-	pass
-
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE # from _CAPTURED, _VISIBLE
 	# Set the camera mode in the inspector
-	if camera_mode == CameraModes.TOP_DOWN:
-		$CameraPivot/Camera3D.position = Vector3(0, 30, 0)
-		$CameraPivot/Camera3D.rotation = Vector3(-0.9*PI/2, 0, 0)
-	elif camera_mode == CameraModes.DEBUG:
-		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
-	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
-	
+	_setup_camera()
+
 	Hud.get_node("Node").connect_player_inventory(inventory)
 	Hud.get_node("Node").connect_player_status(update_status_display)
 	
 	status_effects.status_updated.connect(apply_status_effects)
-	
-# Returns a direction for use with e.g. speed
-func _get_input_direction() -> Vector3:
-	var input_vector = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	return Vector3(input_vector.x, 0, input_vector.y)
 
 func _physics_process(delta: float) -> void:	
 	if !_boosting:
-		if Input.is_action_just_pressed("dash"):
+		if Input.is_action_just_pressed("dash_%s" % player_id):
 			apply_instant_boost(60,0.4)
 		else:
 			_player_movement(delta)
+	_handle_jump(delta)
 
-	_on_test_status_input()
-
-	if Input.is_action_just_pressed("throw_object"): 
+	if Input.is_action_just_pressed("throw_object_%s" % player_id): 
 		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
 		ItemManager.activate_item(self, global_mouse_pos, "BALL")
-		
-		
-	if not is_on_floor():
-		velocity.y -= gravity * delta
-	else:
-		if Input.is_action_just_pressed("jump"):
-			velocity.y = jump_impulse
 			
-	#if Input.is_action_just_pressed("throw_object"): 
-		#var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		#ItemManager.activate_item(self, global_mouse_pos, "BALL")
+	_on_test_status_input()
 	_on_item_input()
 
 	move_and_slide()
 
-func _on_collide(body: Node3D) -> void:
-	if body is Ball and velocity != Vector3.ZERO:
-		body.push(velocity, 2)
-		# TODO:
-		# Apply a baseline directional force on the situation that the player dashes
-		# and the Velocity is detected as ZERO on collision
+# -- MOVEMENT RELATED FUNCTIONS --
 
 func _player_movement(delta):
 	input_direction = _get_input_direction()
@@ -138,37 +111,13 @@ func _player_orientation(direction: Vector3, delta):
 	# wrapf gets the smallest angle distance to desired rotation
 	var angle_diff = wrapf(target_angle - $Pivot.rotation.y, -PI, PI)
 	$Pivot.rotation.y += sign(angle_diff) * min(abs(angle_diff), turn_rate * delta)
-
-func _input(event):
-	# Camera is moveable in DEBUG mode
-	if camera_mode == CameraModes.DEBUG:
-		if event is InputEventMouseMotion:
-			$CameraPivot.rotation.y -= event.relative.x / camera_sensitivity
-			$CameraPivot.rotation.x -= event.relative.y / camera_sensitivity
-		if event is InputEventMouseButton:
-			if event.is_pressed():
-				var wheel_input = 0.0
-				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-					wheel_input += 1
-				if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-					wheel_input -= 1
-				var mouse_dir = $CameraPivot.basis.y * wheel_input
-				$CameraPivot/Camera3D.global_position -= mouse_dir
-
-func _on_item_input():
-	var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-	if Input.is_action_just_pressed("slot_1"):
-		inventory.use_item(self, global_mouse_pos, 1)
-	if Input.is_action_just_pressed("slot_2"):
-		inventory.use_item(self, global_mouse_pos, 2)
-	if Input.is_action_just_pressed("slot_3"):
-		inventory.use_item(self, global_mouse_pos, 3)
-	if Input.is_action_just_pressed("slot_4"):
-		inventory.use_item(self, global_mouse_pos, 4)
-	if Input.is_action_just_pressed("slot_5"):
-		inventory.use_item(self, global_mouse_pos, 5)
-	if Input.is_action_just_pressed("slot_6"):
-		inventory.use_item(self, global_mouse_pos, 6)
+	
+func _handle_jump(delta):
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		if Input.is_action_just_pressed("jump_%s" % player_id):
+			velocity.y = jump_impulse	
 
 ## Applies [i]boost[/i] (flat movement speed) to [member velocity] for [i]duration[/i] (seconds).
 ## [br]E.g. Boost: [param 40.0] Duration: [param 0.4] -> Player moves forward with a speed of 40 for 0.4 seconds	
@@ -179,17 +128,15 @@ func apply_instant_boost(boost: float, duration: float):
 	_boosting = true
 	get_tree().create_timer(duration).timeout.connect(func(): _boosting = false)
 	
+func _on_collide(body: Node3D) -> void:
+	if body is Ball and velocity != Vector3.ZERO:
+		body.push(velocity, 2)
+		# TODO:
+		# Apply a baseline directional force on the situation that the player dashes
+		# and the Velocity is detected as ZERO on collision
 
-func get_mouse_pos():
-	# TODO: Use a height map? When clicking on an elevation, parallax is
-	#		not being taken into account.
-	var ground_plane = Plane(Vector3.UP, 0)	# XZ-plane at Y=0
-	var mouse_pos = get_viewport().get_mouse_position()
-	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)	# point
-	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)	# ray
-	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)	# point
-	
-	return mouse_pos
+# -- STATUS EFFECT RELATED FUNCTIONS --
+
 
 # Applies any effect for a given duration
 # Parameter details:
@@ -203,7 +150,6 @@ func get_mouse_pos():
 #			Data(Value): This is the modifier and duration in a size 2 array.
 #				Index 0 corresponds to modifier
 #				Index 1 coresponds to duration
-	
 '''
 	Example:
 		
@@ -220,7 +166,7 @@ func get_mouse_pos():
 	}
 	but I recommend to just keep it consistent with the rest of the status modifications 
 '''
-func apply_status_effect(effect_name: String, affected_stats: Dictionary[Status, Array]):
+func create_status_effect(effect_name: String, affected_stats: Dictionary[Status, Array]):
 	# Will change this depending on kevin's code
 	for stat in affected_stats.keys():	
 		var modifier = affected_stats.get(stat)[0]
@@ -247,26 +193,86 @@ func apply_status_effects():
 	max_speed = _default_max_speed * status_effects.get_speed_modifier()
 	turn_rate = _default_turn_rate * status_effects.get_turn_rate_modifier()
 
+# -- ITEM RELATED FUNCTIONS --
+
 func pickup_item(item_name: String):
 	inventory.add_item(item_name)
+
+func _on_item_input():
+	var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
+	if Input.is_action_just_pressed("slot_1_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 1)
+	if Input.is_action_just_pressed("slot_2_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 2)
+	if Input.is_action_just_pressed("slot_3_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 3)
+	if Input.is_action_just_pressed("slot_4_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 4)
+	if Input.is_action_just_pressed("slot_5_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 5)
+	if Input.is_action_just_pressed("slot_6_%s" % player_id):
+		inventory.use_item(self, global_mouse_pos, 6)
 	
 func _on_test_status_input():
-	if Input.is_action_just_pressed("status_slow"):
-		apply_status_effect("Test (Slow)", {
+	if Input.is_action_just_pressed("status_slow_%s" % player_id):
+		create_status_effect("Test (Slow)", {
 			Status.MOVE_SPEED: [0.3, 5.0],
 			Status.TURN_RATE: [0.5, 5.0]
 		})
-	if Input.is_action_just_pressed("status_freeze"):
-		apply_status_effect("Test (Freeze)", {
+	if Input.is_action_just_pressed("status_freeze_%s" % player_id):
+		create_status_effect("Test (Freeze)", {
 			Status.MOVE_SPEED: [0.5, 7.0],
 			Status.TURN_RATE: [0.7, 5.0],
 			Status.INPUT: [0, 3.0]
 		})
-	if Input.is_action_just_pressed("status_ragdoll"):
-		apply_status_effect("Test (Ragdoll)", {
+	if Input.is_action_just_pressed("status_ragdoll_%s" % player_id):
+		create_status_effect("Test (Ragdoll)", {
 			Status.INPUT: [3.0]
 		})
-	if Input.is_action_just_pressed("status_root"):
-		apply_status_effect("Test (Root)", {
+	if Input.is_action_just_pressed("status_root_%s" % player_id):
+		create_status_effect("Test (Root)", {
 			Status.MOVE_SPEED: [0, 5.0]
 		})
+
+
+# -- UTILITY FUNCTIONS --
+
+# Returns a direction for use with e.g. speed
+func _get_input_direction() -> Vector3:
+	var input_vector = Input.get_vector("move_left_%s" % player_id, "move_right_%s" % player_id, "move_forward_%s" % player_id, "move_back_%s" % player_id)
+	return Vector3(input_vector.x, 0, input_vector.y)
+
+func get_mouse_pos():
+	# TODO: Use a height map? When clicking on an elevation, parallax is
+	#		not being taken into account.
+	var ground_plane = Plane(Vector3.UP, 0)	# XZ-plane at Y=0
+	var mouse_pos = get_viewport().get_mouse_position()
+	var cam_ray_origin = $CameraPivot/Camera3D.project_ray_origin(mouse_pos)	# point
+	var cam_ray_direction = $CameraPivot/Camera3D.project_ray_normal(mouse_pos)	# ray
+	mouse_pos = ground_plane.intersects_ray(cam_ray_origin, cam_ray_direction)	# point
+	
+	return mouse_pos
+
+func _setup_camera():
+	if camera_mode == CameraModes.TOP_DOWN:
+		$CameraPivot/Camera3D.position = Vector3(0, 30, 0)
+		$CameraPivot/Camera3D.rotation = Vector3(-0.9*PI/2, 0, 0)
+	elif camera_mode == CameraModes.DEBUG:
+		$CameraPivot/Camera3D.position = Vector3(0, 8, 0)
+	$CameraPivot/Camera3D.rotation = Vector3(-PI/2, 0, 0)
+
+func _input(event):
+	# Camera is moveable in DEBUG mode
+	if camera_mode == CameraModes.DEBUG:
+		if event is InputEventMouseMotion:
+			$CameraPivot.rotation.y -= event.relative.x / camera_sensitivity
+			$CameraPivot.rotation.x -= event.relative.y / camera_sensitivity
+		if event is InputEventMouseButton:
+			if event.is_pressed():
+				var wheel_input = 0.0
+				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+					wheel_input += 1
+				if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+					wheel_input -= 1
+				var mouse_dir = $CameraPivot.basis.y * wheel_input
+				$CameraPivot/Camera3D.global_position -= mouse_dir

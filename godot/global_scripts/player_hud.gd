@@ -52,7 +52,7 @@ func show_debug_controls():
 		for event in events:
 			if event is InputEventKey:
 				var status_key = test_status_key.instantiate()
-				status_key.get_node("Status").text = action.split("_")[-1].capitalize()
+				status_key.get_node("Status").text = action.split("_")[1].capitalize()
 				status_key.get_node("Key").text = event.as_text_physical_keycode()
 				$DebugPanel.add_child(status_key)
 				
