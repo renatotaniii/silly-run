@@ -6,9 +6,37 @@
 [node name="Main" type="Node"]
 script = ExtResource("1_2jwmw")
 
-[node name="Player" parent="." instance=ExtResource("4_2jwmw")]
+[node name="GridContainer" type="GridContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 2
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="GridContainer/SubViewportContainer"]
+size = Vector2i(574, 648)
+
+[node name="Player" parent="GridContainer/SubViewportContainer/SubViewport" instance=ExtResource("4_2jwmw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 0)
 
-[node name="Player2" parent="." instance=ExtResource("4_2jwmw")]
+[node name="SubViewportContainer2" type="SubViewportContainer" parent="GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="GridContainer/SubViewportContainer2"]
+handle_input_locally = false
+size = Vector2i(574, 648)
+render_target_update_mode = 4
+
+[node name="Player2" parent="GridContainer/SubViewportContainer2/SubViewport" instance=ExtResource("4_2jwmw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
 player_id = 2

@@ -146,6 +146,50 @@ dash_2={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":66,"key_label":0,"unicode":98,"location":0,"echo":false,"script":null)
 ]
 }
+throw_object_2={
+"deadzone": 0.2,
+"events": []
+}
+status_slow_2={
+"deadzone": 0.2,
+"events": []
+}
+status_freeze_2={
+"deadzone": 0.2,
+"events": []
+}
+status_root_2={
+"deadzone": 0.2,
+"events": []
+}
+status_ragdoll_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_1_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_2_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_3_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_4_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_5_2={
+"deadzone": 0.2,
+"events": []
+}
+slot_6_2={
+"deadzone": 0.2,
+"events": []
+}
 
 [physics]
 
