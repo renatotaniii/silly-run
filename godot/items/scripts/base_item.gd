@@ -16,22 +16,6 @@ enum ActionType {
 	PLACE,
 }
 
-# Not sure if this is still necessary but I'm keeping it here for now
-enum StatusEffect {
-	NONE, 
-	STUNNED, 
-	FROZEN,
-	RAGDOLLED, 
-	ROOTED, 
-	SLOWED,
-}
-
-enum Status {
-	MOVE_SPEED,
-	TURN_RATE,
-	INPUT
-}
-
 @export_category("Item Properies")
 @export var item_name: String = "Unnamed Item"
 @export var max_speed: float = 20.0
@@ -42,11 +26,17 @@ enum Status {
 @export var cast_time: float = 1.0       # multiplier
 @export var despawn_timer: float = 20.0
 
-@export var status_effect: String = "StatusEffect.NONE"
-@export var affected_stats: Dictionary = {Status.MOVE_SPEED: [1.0, 0.0]} # modifier, duration
-@export var duration: float = 0.0
-@export var speed_modifier: float = 1.0
-@export var turn_rate_modifier: float = 1.0
+@export var status_effect: String = "NONE"
+@export var affected_stats: Dictionary = {
+	Player.Status.MOVE_SPEED: [1.0, 0.0],   # modifier, duration
+	Player.Status.TURN_RATE: [1.0, 0.0],
+	Player.Status.INPUT: [0.0]
+	}
+
+# NOTE: This might not be necessary, but we'll keep it
+# @export var duration: float = 0.0
+# @export var speed_modifier: float = 1.0
+# @export var turn_rate_modifier: float = 1.0
 
 
 @export_category("World Properties")
@@ -77,7 +67,7 @@ func _ready() -> void:
 func _on_body_entered(body: Node) -> void:
 	if body is Player:
 		body.apply_status_effect(status_effect, affected_stats)
-		# queue_free()
+		queue_free()
 
 
 # Real stuff

@@ -221,7 +221,7 @@ func get_mouse_pos():
 	}
 	but I recommend to just keep it consistent with the rest of the status modifications 
 '''
-func apply_status_effect(effect_name: String, affected_stats: Dictionary[Status, Array]):
+func apply_status_effect(effect_name: String, affected_stats: Dictionary):
 	# Will change this depending on kevin's code
 	for stat in affected_stats.keys():	
 		var modifier = affected_stats.get(stat)[0]
