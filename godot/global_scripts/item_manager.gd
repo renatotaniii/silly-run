@@ -22,7 +22,7 @@ func activate_item(player: CharacterBody3D, global_mouse_position: Vector3, item
 	var item = ITEM_SCENES[item_name].instantiate()
 	get_tree().root.add_child(item)
 	item.global_position = player.get_node("Pivot/ThrowOrigin").global_position
-	item.place_item(global_mouse_position)
+	item.throw_projectile(global_mouse_position)
 
 ## Helper function if you don't want to use the item spawn pad
 func give_player_item(player: CharacterBody3D, item_name: String):

@@ -32,6 +32,10 @@ enum ActionType {
 	Player.Status.TURN_RATE: [1.0, 0.0],
 	Player.Status.INPUT: [0.0]
 	}
+	
+@export var height_translation: float = 0.0      
+@export var forward_translation: float = 0.0   # -z forward
+@export var side_translation: float = 0.0      # +x right
 
 # NOTE: This might not be necessary, but we'll keep it
 # @export var duration: float = 0.0
@@ -51,12 +55,6 @@ var queued_action: ActionType = ActionType.NONE
 var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
 var queued_position: Vector3 = Vector3.ZERO
-
-
-# Item spawning translations
-var height_translation: float = 0.0      
-var forward_translation: float = 0.0   # -z forward
-var side_translation: float = 0.0      # +x right
 
 
 func _ready() -> void:
@@ -98,6 +96,7 @@ func push(velocity: Vector3, strength_scalar: float = 1.0):
 func throw_projectile(global_mouse_position: Vector3):
 	queued_action = ActionType.THROW
 	self.name = "Yeet"
+	self.apply_translation()
 	var player_to_cursor = global_mouse_position - self.global_position
 
 	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
@@ -120,6 +119,7 @@ func throw_projectile(global_mouse_position: Vector3):
 func shoot_projectile(global_mouse_position: Vector3):
 	queued_action = ActionType.SHOOT
 	self.name = "Bang"
+	self.apply_translation()
 	var player_to_cursor = global_mouse_position - self.global_position
 	
 	# TODO: get point_click to work
@@ -139,5 +139,7 @@ func place_item(global_mouse_position: Vector3):
 	queued_position = global_mouse_position
 	
 	
+# Translate parent node directly
+# TODO: Right now, it's translated locally but not rotated according to player.
 func apply_translation():
-	pass
+	self.translate(Vector3(side_translation, height_translation, forward_translation))

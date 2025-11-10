@@ -12,10 +12,6 @@ func _init() -> void:
 	throw_speed = 20.0    # horizontal speed
 	cast_time = 1.0       # multiplier
 	despawn_timer = 20.0
-
-	gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
-	air_drag_constant = 0.1
-	friction_constant = 0.1    # NOTE: FOR SLIPPING
 	
 	status_effect = "Slipping!"
 	affected_stats = {
@@ -23,6 +19,14 @@ func _init() -> void:
 		Player.Status.TURN_RATE: [0.0, 3.0],
 		Player.Status.INPUT: [3.0],          # duration
 	} 
+	
+	height_translation = 1.0      
+	forward_translation = 6.0   # -z forward
+	side_translation = 0.0      # +x right
+	  
+	gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
+	air_drag_constant = 0.1
+	friction_constant = 0.1
 
 
 """
