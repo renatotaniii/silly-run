@@ -20,9 +20,9 @@ func _init() -> void:
 		Player.Status.INPUT: [3.0],          # duration
 	} 
 	
-	height_translation = 1.0      
-	forward_translation = 6.0   # -z forward
-	side_translation = 0.0      # +x right
+	height_translation = 0.0      
+	forward_translation = 0.0   # +z forward
+	side_translation = 0.0      # +x left
 	  
 	gravity = ProjectSettings.get_setting("physics/3d/default_gravity") 
 	air_drag_constant = 0.1

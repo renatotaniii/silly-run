@@ -21,6 +21,7 @@ const ITEM_SPRITE_POSITION = {
 func activate_item(player: CharacterBody3D, global_mouse_position: Vector3, item_name: String):
 	var item = ITEM_SCENES[item_name].instantiate()
 	get_tree().root.add_child(item)
+	item.global_transform = player.get_node("Pivot/ThrowOrigin").global_transform
 	item.global_position = player.get_node("Pivot/ThrowOrigin").global_position
 	item.throw_projectile(global_mouse_position)
 
