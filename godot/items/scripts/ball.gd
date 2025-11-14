@@ -14,10 +14,7 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	spawn_time = Time.get_ticks_msec() / 1000.0  # seconds
-	contact_monitor = true
-	max_contacts_reported = 1
-	connect("body_entered", Callable(self, "_on_body_entered"))
+	pass
 
 
 func _physics_process(_delta: float):

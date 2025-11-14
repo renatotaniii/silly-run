@@ -26,35 +26,46 @@ enum ActionType {
 @export var cast_time: float = 1.0       # multiplier
 @export var despawn_timer: float = 20.0
 
+@export var status_effect: String = "NONE"
+@export var affected_stats: Dictionary = {
+	Player.Status.MOVE_SPEED: [1.0, 0.0],   # modifier, duration
+	Player.Status.TURN_RATE: [1.0, 0.0],
+	Player.Status.INPUT: [0.0]
+	}
+	
+@export var height_translation: float = 0.0      
+@export var forward_translation: float = 0.0   # -z forward
+@export var side_translation: float = 0.0      # +x right
+
+# NOTE: This might not be necessary, but we'll keep it
+# @export var duration: float = 0.0
+# @export var speed_modifier: float = 1.0
+# @export var turn_rate_modifier: float = 1.0
+
+
 @export_category("World Properties")
 @export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") 
 @export var air_drag_constant: float = 0.1
 @export var friction_constant: float = 0.1   
+
 
 # Physics-related
 var ground: Plane = Plane(Vector3.UP, 0)         # NOTE: change to height map at some point
 var queued_action: ActionType = ActionType.NONE
 var queued_velocity: Vector3 = Vector3.ZERO
 var queued_direction: Vector3 = Vector3.ZERO
-
-# DEBUG STUFF
-var spawn_time = 0.0
+var queued_position: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
-	spawn_time = Time.get_ticks_msec() / 1000.0  # seconds
-	contact_monitor = true
-	max_contacts_reported = 1
-	connect("body_entered", Callable(self, "_on_body_entered"))
+	if has_node("Area3D"):
+		$Area3D.body_entered.connect(_on_body_entered)
 
 
 func _on_body_entered(body: Node) -> void:
-	# TODO: Write logic for despawning items
-	var collision_time = Time.get_ticks_msec() / 1000.0
-	var lifetime = collision_time - spawn_time
-	print("Collided with: ", body.name)
-	print("Lifetime: ", lifetime, "seconds\n")
-	queue_free()  # delete node
+	if body is Player:
+		body.apply_status_effect(status_effect, affected_stats)
+		queue_free()
 
 
 # Real stuff
@@ -67,11 +78,13 @@ func _integrate_forces(state: PhysicsDirectBodyState3D):
 		ActionType.SHOOT:
 			state.apply_central_impulse(queued_direction * shoot_speed)
 		ActionType.PLACE:
-			pass
+			self.global_position = queued_position
 		
 	# Reset
 	queued_action = ActionType.NONE
 	queued_direction = Vector3.ZERO
+	queued_velocity = Vector3.ZERO
+	queued_position = Vector3.ZERO
 
 
 func push(velocity: Vector3, strength_scalar: float = 1.0):
@@ -80,9 +93,11 @@ func push(velocity: Vector3, strength_scalar: float = 1.0):
 
 
 # Calculates a throw direction using horizontal throw_speed and distance to the player
-func use_throw(player_to_cursor: Vector3):
-	self.name = "Yeet"
+func throw_projectile(global_mouse_position: Vector3):
 	queued_action = ActionType.THROW
+	self.name = "Yeet"
+	self.apply_translation()
+	var player_to_cursor = global_mouse_position - self.global_position
 
 	var xz_component = Vector3(player_to_cursor.x, 0, player_to_cursor.z)
 	var xz_direction = xz_component.normalized()
@@ -100,11 +115,14 @@ func use_throw(player_to_cursor: Vector3):
 	xz_direction.y = tan(angle)
 	queued_direction = xz_direction
 	
-	
-func shoot_projectile(player_to_cursor: Vector3):
-	self.name = "Bang"
+# TODO: ITEM TRANSLATIONS
+func shoot_projectile(global_mouse_position: Vector3):
 	queued_action = ActionType.SHOOT
+	self.name = "Bang"
+	self.apply_translation()
+	var player_to_cursor = global_mouse_position - self.global_position
 	
+	# TODO: get point_click to work
 	if self.point_click:
 		queued_direction = player_to_cursor.normalized()
 	else:
@@ -112,8 +130,16 @@ func shoot_projectile(player_to_cursor: Vector3):
 		queued_direction = xz_component.normalized()
 	
 	
-func place_item(global_cursor_pos: Vector3):
-	self.name = "Park"
+# TODO: fix this shit so it works with max_range
+func place_item(global_mouse_position: Vector3):
 	queued_action = ActionType.PLACE
+	self.name = "Park"
+	#var player_to_cursor = global_mouse_position - self.global_position
+	#queued_position = player_to_cursor.normalized() * max_range
+	queued_position = global_mouse_position
 	
-	self.global_position = global_cursor_pos
+	
+# Translate parent node directly
+# TODO: Right now, it's translated locally but not rotated according to player.
+func apply_translation():
+	self.translate(Vector3(side_translation, height_translation, forward_translation))
