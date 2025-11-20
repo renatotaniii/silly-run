@@ -96,7 +96,7 @@ func _physics_process(delta: float) -> void:
 
 	if Input.is_action_just_pressed("throw_object"): 
 		var global_mouse_pos = get_mouse_pos()  # Vector3 (point on ground)
-		ItemManager.activate_item(self, global_mouse_pos, "BALL")
+		ItemManager.activate_item(self, global_mouse_pos, "WET_FLOOR_SIGN")
 		
 		
 	if not is_on_floor():
@@ -112,9 +112,10 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+
 func _on_collide(body: Node3D) -> void:
-	if body is Ball and velocity != Vector3.ZERO:
-		body.push(velocity, 2)
+	if body is BaseItem and velocity != Vector3.ZERO:
+		body.push(velocity, 1) # velocity, strength_scalar
 		# TODO:
 		# Apply a baseline directional force on the situation that the player dashes
 		# and the Velocity is detected as ZERO on collision
@@ -220,7 +221,7 @@ func get_mouse_pos():
 	}
 	but I recommend to just keep it consistent with the rest of the status modifications 
 '''
-func apply_status_effect(effect_name: String, affected_stats: Dictionary[Status, Array]):
+func apply_status_effect(effect_name: String, affected_stats: Dictionary):
 	# Will change this depending on kevin's code
 	for stat in affected_stats.keys():	
 		var modifier = affected_stats.get(stat)[0]
